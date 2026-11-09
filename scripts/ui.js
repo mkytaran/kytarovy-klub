@@ -1,5 +1,5 @@
 import { AVATARS, avatarEmoji } from "./avatars.js";
-import { getLevel } from "./stats.js";
+import { getLevel, getStudentStats } from "./stats.js";
 
 export function escapeHtml(value) {
   return String(value).replace(/[&<>"']/g, (character) => ({
