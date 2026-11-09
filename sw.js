@@ -1,4 +1,4 @@
-const CACHE_NAME = "kytarovy-klub-v7";
+const CACHE_NAME = "kytarovy-klub-v8";
 const APP_SHELL = [
   "./",
   "./index.html",
@@ -11,7 +11,8 @@ const APP_SHELL = [
   "./scripts/avatars.js",
   "./scripts/stats.js",
   "./scripts/ui.js",
-  "./icons/guitar.svg"
+  "./icons/guitar.svg",
+  "./icons/guitar-photo.png"
 ];
 
 self.addEventListener("install", (event) => {
