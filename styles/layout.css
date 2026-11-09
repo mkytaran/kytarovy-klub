@@ -1,0 +1,94 @@
+.app-shell { width: min(1120px, calc(100% - 48px)); margin: 0 auto; }
+.topbar { min-height: 86px; display: flex; align-items: center; gap: 42px; }
+.brand { display: inline-flex; align-items: center; gap: 10px; color: var(--ink); text-decoration: none; font-weight: 800; font-family: "Manrope", sans-serif; white-space: nowrap; }
+.brand-mark { display: block; width: 38px; height: 38px; border-radius: 12px; }
+.main-nav { display: flex; align-items: center; gap: 8px; }
+.account-actions { display: flex; align-items: center; gap: 16px; margin-left: auto; }
+.offline-label { display: flex; align-items: center; gap: 8px; color: var(--muted); font-size: 12px; white-space: nowrap; }
+.status-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--green); }
+
+main { min-height: calc(100vh - 150px); }
+.page { padding: 24px 0 55px; }
+.page[hidden] { display: none; }
+.login-panel { display: grid; grid-template-columns: .85fr 1.15fr; overflow: hidden; margin: 40px auto 60px; border: 1px solid var(--line); border-radius: 24px; background: var(--white); box-shadow: var(--shadow); }
+.login-art { position: relative; display: grid; min-height: 540px; place-items: center; overflow: hidden; background: var(--ink); }
+.login-art img { position: relative; z-index: 1; width: 165px; filter: drop-shadow(0 18px 22px rgb(0 0 0 / 23%)); transform: rotate(9deg); }
+.login-art::before { position: absolute; width: 290px; height: 290px; border-radius: 50%; background: var(--yellow); content: ""; }
+.login-art > span { position: absolute; z-index: 1; top: 90px; right: 60px; color: var(--ink); font-size: 50px; }
+.login-copy { align-self: center; width: min(440px, 100%); padding: 48px; margin: 0 auto; }
+.login-copy h1 { margin-bottom: 12px; font-size: clamp(29px, 3.5vw, 39px); line-height: 1.16; letter-spacing: -.04em; }
+.login-copy h1 span { color: var(--orange); }
+.login-description { margin-bottom: 26px; color: var(--muted); font-size: 14px; line-height: 1.65; }
+.login-form { display: grid; gap: 16px; }
+.login-hint { margin: -5px 0 0; color: var(--muted); font-size: 11px; line-height: 1.55; }
+.login-submit { width: 100%; }
+.login-privacy { margin-top: 22px; text-align: left; }
+.logout-button { padding: 9px 13px; border: 1px solid var(--line); border-radius: 10px; background: var(--white); cursor: pointer; font-size: 12px; font-weight: 700; }
+.hero { position: relative; display: flex; min-height: 340px; align-items: center; overflow: hidden; padding: 50px 60px; border-radius: 26px; color: var(--white); background: var(--ink); }
+.hero-copy { position: relative; z-index: 1; width: 62%; }
+.hero-art { position: absolute; inset: 0 0 0 auto; display: grid; width: 42%; place-items: center; }
+.hero-art img { position: relative; z-index: 1; width: 155px; transform: rotate(12deg); filter: drop-shadow(0 18px 22px rgb(0 0 0 / 24%)); }
+.sunburst { position: absolute; right: 68px; width: 280px; height: 280px; border-radius: 50%; background: var(--yellow); }
+.hero-note { position: absolute; z-index: 2; color: var(--ink); font-size: 40px; }
+.note-one { top: 60px; right: 115px; transform: rotate(14deg); }
+.note-two { right: 50px; bottom: 60px; transform: rotate(-12deg); }
+.stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin: 22px 0 48px; }
+.section-block { margin-top: 10px; }
+.section-heading { display: flex; align-items: end; justify-content: space-between; gap: 20px; margin-bottom: 20px; }
+.section-heading h2, .history-toolbar h2 { margin: 0; font-size: 23px; }
+.page-heading { margin: 24px 0 30px; }
+.page-heading > p:last-child { margin-bottom: 0; color: var(--muted); }
+.form-card, .history-card { padding: 26px; border: 1px solid var(--line); border-radius: 20px; background: var(--white); box-shadow: var(--shadow); }
+.add-student-form { display: flex; align-items: end; gap: 14px; max-width: 680px; padding: 24px; border: 1px solid var(--line); border-radius: 18px; background: var(--white); }
+.add-student-form .field-label { flex: 1; }
+.students-list { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; margin-top: 22px; }
+.code-field { width: 150px; }
+.profile-card { padding: 28px; border: 1px solid var(--line); border-radius: 20px; background: var(--white); box-shadow: var(--shadow); }
+.profile-current { display: flex; align-items: center; gap: 16px; padding-bottom: 22px; border-bottom: 1px solid var(--line); }
+.profile-current h2 { margin: 0; font-size: 20px; }
+.avatar-heading { margin: 23px 0 16px; font-size: 15px; }
+.avatar-picker { display: grid; grid-template-columns: repeat(8, minmax(0, 1fr)); gap: 12px; }
+.history-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 18px; }
+.footer { padding: 24px 0 30px; color: #9a9fa5; text-align: center; font-size: 12px; }
+
+@media (max-width: 760px) {
+  .app-shell { width: min(100% - 32px, 600px); }
+  .topbar { min-height: 72px; flex-wrap: wrap; gap: 12px; padding: 14px 0 8px; }
+  .main-nav { order: 3; width: 100%; justify-content: space-between; gap: 2px; }
+  .account-actions { gap: 10px; }
+  .offline-label { font-size: 0; }
+  .offline-label .status-dot { width: 9px; height: 9px; }
+  .login-panel { grid-template-columns: 1fr; margin: 24px auto 40px; }
+  .login-art { min-height: 180px; }
+  .login-art::before { width: 145px; height: 145px; }
+  .login-art img { width: 88px; }
+  .login-art > span { top: 23px; right: calc(50% - 85px); font-size: 35px; }
+  .login-copy { width: 100%; padding: 30px 26px; }
+  .hero { min-height: 380px; align-items: start; padding: 35px 28px; }
+  .hero-copy { width: 100%; }
+  .hero-art { inset: auto 0 0 auto; width: 44%; height: 180px; }
+  .hero-art img { width: 110px; }
+  .sunburst { right: 24px; width: 175px; height: 175px; }
+  .note-one { top: 0; right: 82px; font-size: 30px; }
+  .note-two { right: 24px; bottom: 34px; font-size: 30px; }
+  .stats-grid { gap: 10px; margin: 16px 0 38px; }
+  .section-heading h2, .history-toolbar h2 { font-size: 20px; }
+  .students-list { grid-template-columns: 1fr; }
+  .avatar-picker { grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 9px; }
+  .profile-card { padding: 20px; }
+}
+
+@media (max-width: 480px) {
+  .hero { min-height: 420px; padding: 30px 22px; }
+  .hero-copy { width: 100%; }
+  .hero-art { width: 48%; height: 165px; }
+  .login-art { min-height: 145px; }
+  .login-copy { padding: 24px 20px; }
+  .stats-grid { grid-template-columns: 1fr; }
+  .section-heading { align-items: start; }
+  .text-button { max-width: 120px; text-align: right; }
+  .form-card, .history-card { padding: 19px 16px; }
+  .add-student-form { align-items: stretch; flex-direction: column; padding: 18px; }
+  .history-toolbar { align-items: start; flex-direction: column; }
+  .avatar-picker { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+}

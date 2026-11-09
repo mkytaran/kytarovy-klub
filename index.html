@@ -1,0 +1,174 @@
+<!doctype html>
+<html lang="cs">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#111827">
+    <meta name="description" content="Soukromý motivační přehled pro třídu klasické kytary.">
+    <meta name="robots" content="noindex, nofollow">
+    <title>Kytarový klub</title>
+    <link rel="icon" href="icons/guitar.svg" type="image/svg+xml">
+    <link rel="stylesheet" href="styles/base.css">
+    <link rel="stylesheet" href="styles/layout.css">
+    <link rel="stylesheet" href="styles/components.css">
+  </head>
+  <body>
+    <div class="app-shell">
+      <header class="topbar">
+        <a class="brand" href="#prehled" aria-label="Kytarový klub – přehled">
+          <img class="brand-mark" src="icons/guitar.svg" alt="">
+          <span>Kytarový klub</span>
+        </a>
+        <nav class="main-nav" aria-label="Hlavní navigace" id="main-nav" hidden>
+          <button class="nav-link is-active" type="button" data-page="prehled">Přehled</button>
+          <button class="nav-link" type="button" data-page="body" data-role="teacher" hidden>Zapsat body</button>
+          <button class="nav-link" type="button" data-page="zaci" data-role="teacher" hidden>Správa žáků</button>
+          <button class="nav-link" type="button" data-page="profil" data-role="student" hidden>Můj profil</button>
+          <button class="nav-link" type="button" data-page="historie">Historie</button>
+        </nav>
+        <div class="account-actions" id="account-actions" hidden>
+          <span class="offline-label"><span class="status-dot"></span> Soukromá třída</span>
+          <button class="logout-button" id="logout-button" type="button">Odhlásit</button>
+        </div>
+      </header>
+
+      <main>
+        <div id="notice" class="notice" role="status" aria-live="polite" hidden></div>
+        <section class="login-panel" id="login-panel" aria-labelledby="login-title">
+          <div class="login-art" aria-hidden="true">
+            <img src="icons/guitar.svg" alt="">
+            <span>♪</span>
+          </div>
+          <div class="login-copy">
+            <p class="eyebrow">TŘÍDA KLASICKÉ KYTARY</p>
+            <h1 id="login-title">Vítej v <span>Kytarovém klubu</span></h1>
+            <p class="login-description">Přihlas se svým jménem a kódem a podívej se, jak se celé třídě daří.</p>
+            <form id="login-form" class="login-form">
+              <label class="field-label" for="login-name">
+                Přihlašovací jméno
+                <input id="login-name" name="name" type="text" maxlength="80" autocomplete="off" autocapitalize="none" required>
+              </label>
+              <label class="field-label" for="login-code">
+                Šestimístný kód
+                <input id="login-code" name="code" type="password" inputmode="numeric" pattern="[0-9]{6}" minlength="6" maxlength="6" autocomplete="off" aria-describedby="code-hint" required>
+              </label>
+              <p class="login-hint" id="code-hint">Kód ti předá učitel. Po několika chybných pokusech se přihlášení dočasně uzamkne.</p>
+              <button class="button button-primary login-submit" type="submit">Přihlásit se <span aria-hidden="true">→</span></button>
+            </form>
+            <p class="privacy-note login-privacy"><span aria-hidden="true">🔒</span> Body a profily uvidí jen přihlášení členové třídy.</p>
+          </div>
+        </section>
+
+        <div id="app-content" hidden>
+          <section class="page is-visible" id="page-prehled" aria-labelledby="welcome-title">
+            <div class="hero">
+              <div class="hero-copy">
+                <p class="eyebrow">TŘÍDA KLASICKÉ KYTARY</p>
+                <h1 id="welcome-title">Každý bod se počítá. <span>Každý tón taky.</span></h1>
+                <p class="hero-description">Pochvala za snahu a společná hudební cesta celé třídy.</p>
+                <button class="button button-light" type="button" data-go="body" data-role="teacher" hidden>＋ Zapsat dnešní body</button>
+              </div>
+              <div class="hero-art" aria-hidden="true">
+                <div class="sunburst"></div>
+                <div class="hero-note note-one">♪</div>
+                <div class="hero-note note-two">♫</div>
+                <img src="icons/guitar.svg" alt="">
+              </div>
+            </div>
+
+            <div class="stats-grid" id="overview-stats"></div>
+            <section class="section-block">
+              <div class="section-heading">
+                <div>
+                  <p class="eyebrow">NÁŠ TÝM</p>
+                  <h2>Žebříček kytaristů</h2>
+                </div>
+                <button class="text-button" type="button" data-go="zaci" data-role="teacher" hidden>Spravovat žáky <span aria-hidden="true">→</span></button>
+              </div>
+              <div id="leaderboard" class="leaderboard"></div>
+            </section>
+          </section>
+
+          <section class="page" id="page-body" aria-labelledby="scores-title" hidden>
+            <div class="page-heading">
+              <p class="eyebrow">MOTIVACE NA KAŽDÉ HODINĚ</p>
+              <h1 id="scores-title">Zapsat body <span class="heading-emoji" aria-hidden="true">✨</span></h1>
+              <p>Za dnešní snahu může každý kytarista získat 1 až 10 bodů.</p>
+            </div>
+            <form id="score-form" class="form-card">
+              <div class="form-topline">
+                <label class="field-label date-field" for="lesson-date">
+                  Datum lekce
+                  <input id="lesson-date" name="date" type="date" required>
+                </label>
+                <p class="form-hint">Vyplň body jen těm, které chceš dnes ohodnotit.</p>
+              </div>
+              <div id="score-students" class="score-students"></div>
+              <div class="form-footer">
+                <span class="form-hint">Body jsou pochvala za snahu, ne školní známka. 💛</span>
+                <button class="button button-primary" type="submit">Uložit body <span aria-hidden="true">→</span></button>
+              </div>
+            </form>
+          </section>
+
+          <section class="page" id="page-zaci" aria-labelledby="students-title" hidden>
+            <div class="page-heading">
+              <p class="eyebrow">KYTAROVÁ PARTA</p>
+              <h1 id="students-title">Správa žáků <span class="heading-emoji" aria-hidden="true">🎸</span></h1>
+              <p>Učitel přidává účty a předává každému žákovi jeho přihlašovací kód.</p>
+            </div>
+            <form id="student-form" class="add-student-form">
+              <label class="field-label" for="student-name">
+                Jméno a přihlašovací jméno
+                <input id="student-name" name="name" type="text" maxlength="80" placeholder="Např. Tereza Nová" autocomplete="off" required>
+              </label>
+              <label class="field-label code-field" for="student-code">
+                Šestimístný kód
+                <input id="student-code" name="code" type="password" inputmode="numeric" pattern="[0-9]{6}" minlength="6" maxlength="6" autocomplete="off" required>
+              </label>
+              <button class="button button-primary" type="submit">＋ Přidat žáka</button>
+            </form>
+            <div id="students-list" class="students-list"></div>
+          </section>
+
+          <section class="page" id="page-profil" aria-labelledby="profile-title" hidden>
+            <div class="page-heading">
+              <p class="eyebrow">VYBER SI SVÉ ZVÍŘÁTKO</p>
+              <h1 id="profile-title">Můj profil <span class="heading-emoji" aria-hidden="true">🐾</span></h1>
+              <p>Vyber si ikonku, která tě bude doprovázet na tvé hudební cestě.</p>
+            </div>
+            <div class="profile-card">
+              <div class="profile-current">
+                <span class="avatar-circle avatar-large" id="profile-avatar" aria-hidden="true">🎸</span>
+                <div><p class="eyebrow">TVŮJ PROFIL</p><h2 id="profile-name"></h2></div>
+              </div>
+              <h2 class="avatar-heading">Vyber si zvířecího parťáka</h2>
+              <div id="avatar-picker" class="avatar-picker" role="group" aria-label="Výběr zvířecího avatara"></div>
+            </div>
+          </section>
+
+          <section class="page" id="page-historie" aria-labelledby="history-title" hidden>
+            <div class="page-heading">
+              <p class="eyebrow">OHLÉDNI SE ZA CESTOU</p>
+              <h1 id="history-title">Historie bodů <span class="heading-emoji" aria-hidden="true">🎶</span></h1>
+              <p id="history-description">Zapsané body ze třídních kytarových lekcí.</p>
+            </div>
+            <div class="history-card">
+              <div class="history-toolbar">
+                <h2>Poslední zápisy</h2>
+                <label class="sr-only" for="history-filter">Filtrovat podle žáka</label>
+                <select id="history-filter" data-role="teacher" hidden>
+                  <option value="all">Všichni žáci</option>
+                </select>
+              </div>
+              <div id="history-list"></div>
+            </div>
+          </section>
+          <p class="privacy-note"><span aria-hidden="true">🔒</span> Soukromý obsah je dostupný jen po přihlášení.</p>
+        </div>
+      </main>
+      <footer class="footer">Vytvořeno pro radost z hudby <span aria-hidden="true">♪</span></footer>
+    </div>
+    <script type="module" src="scripts/app.js"></script>
+  </body>
+</html>

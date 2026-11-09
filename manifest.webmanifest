@@ -1,0 +1,19 @@
+{
+  "name": "Kytarový klub",
+  "short_name": "Kytarový klub",
+  "description": "Soukromý motivační přehled pro třídu klasické kytary.",
+  "lang": "cs",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#f7f7f4",
+  "theme_color": "#111827",
+  "icons": [
+    {
+      "src": "icons/guitar.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

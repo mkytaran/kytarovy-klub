@@ -1,0 +1,19 @@
+name = "kytarovy-klub-api"
+main = "src/index.js"
+compatibility_date = "2025-01-15"
+
+[vars]
+# Set APP_ORIGINS to exact origins, comma-separated (no path), before deployment.
+APP_ORIGINS = "https://YOUR-USERNAME.github.io"
+
+[[durable_objects.bindings]]
+name = "LOGIN_LIMITER"
+class_name = "LoginRateLimiter"
+
+[[durable_objects.bindings]]
+name = "USER_SESSION"
+class_name = "UserSession"
+
+[[migrations]]
+tag = "v1"
+new_sqlite_classes = ["LoginRateLimiter", "UserSession"]

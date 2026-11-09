@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="cs">
+  <head>
+    <base target="_top">
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Kytarový klub</title>
+    <style>
+      html, body, iframe { width: 100%; height: 100%; margin: 0; border: 0; }
+      body { overflow: hidden; background: #f7f5ef; }
+      iframe { display: block; }
+    </style>
+  </head>
+  <body>
+    <iframe id="app-frame" src="<?= APP_URL ?>" data-app-origin="<?= APP_ORIGIN ?>"
+      referrerpolicy="strict-origin-when-cross-origin" title="Kytarový klub"></iframe>
+    <script>
+      (() => {
+        const frame = document.querySelector("#app-frame");
+        const appOrigin = frame.dataset.appOrigin;
+        const allowedMethods = {
+          login: "apiLogin",
+          logout: "apiLogout",
+          getClassData: "apiGetClassData",
+          addStudent: "apiAddStudent",
+          deactivateStudent: "apiDeactivateStudent",
+          resetStudentCode: "apiResetStudentCode",
+          recordScores: "apiRecordScores",
+          selectAvatar: "apiSelectAvatar"
+        };
+
+        window.addEventListener("message", (event) => {
+          const request = event.data;
+          if (event.source !== frame.contentWindow || event.origin !== appOrigin
+            || !request || request.channel !== "kytarovy-klub" || request.type !== "request"
+            || typeof request.id !== "string" || !/^[a-f0-9-]{36}$/i.test(request.id)
+            || !Object.prototype.hasOwnProperty.call(allowedMethods, request.method) || !Array.isArray(request.args)
+            || request.args.length > 3 || JSON.stringify(request).length > 16000) return;
+
+          const reply = (result) => frame.contentWindow.postMessage({
+            channel: "kytarovy-klub",
+            type: "response",
+            id: request.id,
+            result
+          }, appOrigin);
+          const runner = google.script.run
+            .withSuccessHandler(reply)
+            .withFailureHandler(() => reply({
+              ok: false,
+              status: 500,
+              error: "Požadavek se nepodařilo bezpečně dokončit."
+            }));
+          runner[allowedMethods[request.method]].apply(runner, request.args);
+        });
+      })();
+    </script>
+  </body>
+</html>
