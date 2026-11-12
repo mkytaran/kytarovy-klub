@@ -121,21 +121,25 @@ export function renderStudents(students, rankedStudents) {
       const stats = statsById.get(student.id);
       const level = getLevel(stats?.totalPoints ?? 0);
       return `<article class="student-card">
-        <span class="student-avatar" aria-hidden="true">${avatarEmoji(student.avatar)}</span>
-        <div class="student-info">
-          <strong>${escapeHtml(student.name)}</strong>
-          <span>${stats?.totalPoints ?? 0} bodů · ${level.name} · ${student.lessonDay ? lessonDayName(student.lessonDay) : "den hodiny nenastaven"}</span>
+        <div class="student-card-heading">
+          <span class="student-avatar" aria-hidden="true">${avatarEmoji(student.avatar)}</span>
+          <div class="student-info">
+            <strong>${escapeHtml(student.name)}</strong>
+            <span>${stats?.totalPoints ?? 0} bodů · ${level.name} · ${student.lessonDay ? lessonDayName(student.lessonDay) : "den hodiny nenastaven"}</span>
+          </div>
         </div>
-        <div class="student-day-control">
-          <label class="sr-only" for="lesson-day-${escapeHtml(student.id)}">Den hodiny – ${escapeHtml(student.name)}</label>
-          <select id="lesson-day-${escapeHtml(student.id)}" data-lesson-day="${escapeHtml(student.id)}">
-            <option value="">Den hodiny</option>
-            ${LESSON_DAYS.map(([value, label]) => `<option value="${value}"${student.lessonDay === value ? " selected" : ""}>${label}</option>`).join("")}
-          </select>
-          <button class="student-action" type="button" data-save-lesson-day="${escapeHtml(student.id)}"${student.lessonDay === "" ? " disabled" : ""}>Uložit den</button>
+        <div class="student-card-actions">
+          <div class="student-day-control">
+            <label class="sr-only" for="lesson-day-${escapeHtml(student.id)}">Den hodiny – ${escapeHtml(student.name)}</label>
+            <select id="lesson-day-${escapeHtml(student.id)}" data-lesson-day="${escapeHtml(student.id)}">
+              <option value="">Den hodiny</option>
+              ${LESSON_DAYS.map(([value, label]) => `<option value="${value}"${student.lessonDay === value ? " selected" : ""}>${label}</option>`).join("")}
+            </select>
+            <button class="student-action" type="button" data-save-lesson-day="${escapeHtml(student.id)}"${student.lessonDay === "" ? " disabled" : ""}>Uložit den</button>
+          </div>
+          <button class="student-action" type="button" data-reset-student="${escapeHtml(student.id)}">Nový kód</button>
+          <button class="remove-student" type="button" data-remove-student="${escapeHtml(student.id)}" aria-label="Odebrat žáka ${escapeHtml(student.name)}">Odebrat</button>
         </div>
-        <button class="student-action" type="button" data-reset-student="${escapeHtml(student.id)}">Nový kód</button>
-        <button class="remove-student" type="button" data-remove-student="${escapeHtml(student.id)}" aria-label="Odebrat žáka ${escapeHtml(student.name)}">Odebrat</button>
       </article>`;
     }).join("");
   if (!container.innerHTML) container.innerHTML = emptyState("Zatím tu nejsou žádní žáci", "Účty může do třídy přidávat jen učitel.");

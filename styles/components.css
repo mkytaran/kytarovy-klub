@@ -56,7 +56,9 @@
 .extra-reason-field[hidden] { display: none; }
 .form-footer { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding-top: 18px; border-top: 1px solid var(--line); }
 .add-student-form .button { flex-shrink: 0; }
-.student-card { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; padding: 17px; border: 1px solid var(--line); border-radius: 16px; background: var(--white); }
+.student-card { display: grid; gap: 14px; min-width: 0; padding: 17px; border: 1px solid var(--line); border-radius: 16px; background: var(--white); }
+.student-card-heading { display: flex; min-width: 0; align-items: center; gap: 12px; }
+.student-card-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
 .avatar-circle { display: grid; width: 48px; height: 48px; flex: 0 0 auto; place-items: center; border: 2px solid #fff; border-radius: 50%; background: #fff0c9; box-shadow: 0 0 0 1px #e7e7e1; font-size: 25px; }
 .avatar-large { width: 70px; height: 70px; font-size: 38px; }
 .avatar-picker-button { display: grid; aspect-ratio: 1; min-width: 0; place-items: center; padding: 3px; border: 2px solid transparent; border-radius: 50%; background: transparent; cursor: pointer; transition: transform .16s, border-color .16s, background .16s; }
