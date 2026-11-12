@@ -1,3 +1,5 @@
+import { handleSupabaseRequest } from "./supabase.js";
+
 const GOOGLE_API = "https://sheets.googleapis.com/v4/spreadsheets";
 const GOOGLE_TOKEN_URL = "https://oauth2.googleapis.com/token";
 const GOOGLE_SCOPE = "https://www.googleapis.com/auth/spreadsheets";
@@ -46,10 +48,12 @@ export default {
     }
 
     try {
+      const supabaseResponse = await handleSupabaseRequest(request, env);
+      if (supabaseResponse) return withHeaders(supabaseResponse, headers);
       const response = await routeRequest(request, env);
       return withHeaders(response, headers);
     } catch (error) {
-      if (error instanceof HttpError) {
+      if (error instanceof HttpError || error?.name === "SupabaseError") {
         return withHeaders(json({ error: error.message }, error.status), headers);
       }
       console.error("api_request_failed", error instanceof Error ? error.name : "UnknownError");
@@ -522,8 +526,22 @@ async function googleAccessToken(env) {
     })
   });
   if (!response.ok) {
-    await response.body?.cancel();
-    throw new HttpError(503, "Přístup k soukromé tabulce Google se nepodařilo ověřit.");
+    let errorCode = "";
+    try {
+      const body = await response.json();
+      if (typeof body.error === "string") errorCode = body.error;
+    } catch {
+      await response.body?.cancel();
+    }
+    const message = {
+      invalid_grant: "Google odmítl podepsaný požadavek. Zkontroluj, že GOOGLE_SERVICE_ACCOUNT_EMAIL a GOOGLE_PRIVATE_KEY pocházejí ze stejného JSON klíče a že tento klíč není v Google Cloud zrušený.",
+      invalid_client: "Google odmítl účet služby. Zkontroluj GOOGLE_SERVICE_ACCOUNT_EMAIL a GOOGLE_PRIVATE_KEY ze stejného JSON klíče.",
+      unauthorized_client: "Google nepovolil ověření tímto účtem služby. Zkontroluj, že účet služby je aktivní a Google Sheets API je povolené v jeho projektu.",
+      access_denied: "Google zamítl přístup. Zkontroluj, že tabulka je sdílená jako Čtenář přesně s e-mailem účtu služby.",
+      invalid_scope: "Google odmítl požadovaná oprávnění. Zkontroluj nastavení účtu služby a povolené Google Sheets API."
+    }[errorCode] || "Google odmítl ověření účtu služby. Zkontroluj, že e-mail a privátní klíč pocházejí ze stejného JSON klíče a že účet služby je aktivní.";
+    console.error("google_auth_failed", errorCode || `HTTP_${response.status}`);
+    throw new HttpError(503, message);
   }
   const result = await response.json();
   googleTokenCache = {
@@ -659,9 +677,7 @@ function requireTeacher(account) {
 function requireBindings(env) {
   if (!env.GOOGLE_SERVICE_ACCOUNT_EMAIL
     || !env.GOOGLE_PRIVATE_KEY
-    || !env.SPREADSHEET_ID
-    || !env.PIN_PEPPER
-    || env.PIN_PEPPER.length < 32) {
+    || !env.SPREADSHEET_ID) {
     throw new HttpError(503, "Zabezpečené úložiště ještě není nakonfigurované.");
   }
 }

@@ -56,3 +56,14 @@ Tato adresa musí přesně odpovídat vlastnosti `APP_URL` v Apps Scriptu. V `in
 - Apps Script má kvóty a limity souběžných běhů; pro malou třídu obvykle postačí, ale nejde o službu s garantovanou dostupností.
 
 Před ukládáním údajů nezletilých ověř pravidla školy a požadavky na ochranu osobních údajů pro použité služby.
+
+## Nový provoz na Supabase
+
+Nová verze webové aplikace komunikuje přímo s `/api/v2/` v Cloudflare Workeru. Účty a body ze staré Google tabulky se nepřevádějí; tabulka zůstává nedotčená jako archiv. Nová třída začíná bez žáků a bez historie.
+
+Supabase schéma, Worker, tajný klíč Supabase a účet učitele už byly připravené. Po zveřejnění této verze webu:
+
+1. Přihlas se účtem učitele Michal Novák a jeho heslem Supabase.
+2. Na stránce **Správa žáků** založ každého žáka znovu. Nastav heslo dlouhé alespoň 12 znaků a předej ho soukromě. Staré šestimístné kódy pro nový systém neplatí.
+3. Jakmile ověříš přihlášení, správu účtů a zápis bodů, můžeš Google tabulku ponechat jako archiv. Její service account, Google Sheets API ani Google klíč nejsou pro novou verzi potřeba.
+4. Bootstrap tajemství `SUPABASE_BOOTSTRAP_SECRET` po vytvoření učitele smaž příkazem `npx wrangler secret delete SUPABASE_BOOTSTRAP_SECRET`; nová aplikace ho k běžnému provozu nepotřebuje. Tajemství `SUPABASE_SECRET_KEY` ponech.

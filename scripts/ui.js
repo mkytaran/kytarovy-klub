@@ -175,7 +175,7 @@ export function renderStudents(students, rankedStudents, entries) {
             </select>
             <button class="student-action" type="button" data-save-lesson-day="${escapeHtml(student.id)}"${student.lessonDay === "" ? " disabled" : ""}>Uložit den</button>
           </div>
-          <button class="student-action" type="button" data-reset-student="${escapeHtml(student.id)}">Nový kód</button>
+          <button class="student-action" type="button" data-reset-student="${escapeHtml(student.id)}">Nové heslo</button>
           <button class="remove-student" type="button" data-remove-student="${escapeHtml(student.id)}" aria-label="Odebrat žáka ${escapeHtml(student.name)}">Odebrat</button>
         </div>
       </article>`;

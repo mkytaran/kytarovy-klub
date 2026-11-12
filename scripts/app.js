@@ -6,7 +6,7 @@ import {
   login,
   logout,
   recordScores,
-  resetStudentCode,
+  resetStudentPassword,
   restoreSession,
   selectAvatar,
   updateStudentAvatar,
@@ -207,15 +207,15 @@ document.querySelector("#login-form").addEventListener("submit", async (event) =
   event.preventDefault();
   const form = event.currentTarget;
   const name = form.elements.name.value.trim().replace(/\s+/g, " ");
-  const code = form.elements.code.value;
-  if (!/^[0-9]{6}$/.test(code)) {
-    showNotice("Zadej šestimístný číselný kód.", true);
+  const password = form.elements.password.value;
+  if (password.length < 12 || password.length > 128) {
+    showNotice("Heslo musí mít 12 až 128 znaků.", true);
     return;
   }
   const submit = form.querySelector("button[type=submit]");
   submit.disabled = true;
   try {
-    currentUser = await login(name, code);
+    currentUser = await login(name, password);
     classData = await getClassData();
     if (classData.user.id !== currentUser.id) throw new Error("Server vrátil neplatný uživatelský profil.");
     currentUser = classData.user;
@@ -233,17 +233,17 @@ document.querySelector("#student-form").addEventListener("submit", async (event)
   event.preventDefault();
   const form = event.currentTarget;
   const name = form.elements.name.value.trim().replace(/\s+/g, " ");
-  const code = form.elements.code.value;
+  const password = form.elements.password.value;
   const lessonDay = form.elements.lessonDay.value;
-  if (!name || !/^[0-9]{6}$/.test(code)) {
-    showNotice("Vyplň jméno a šestimístný číselný kód.", true);
+  if (!name || password.length < 12 || password.length > 128) {
+    showNotice("Vyplň jméno a heslo dlouhé 12 až 128 znaků.", true);
     return;
   }
   try {
-    await addStudent(name, code, lessonDay);
+    await addStudent(name, password, lessonDay);
     form.reset();
     if (await refreshAfterMutation()) {
-      showNotice(`Účet pro ${name} je připravený. Kód předej žákovi bezpečně.`);
+      showNotice(`Účet pro ${name} je připravený. Zadané heslo předej žákovi bezpečně.`);
     } else if (currentUser) {
       showNotice(`Účet pro ${name} byl vytvořen, ale seznam se nepodařilo obnovit. Znovu načti aplikaci.`, true);
     }
@@ -347,15 +347,15 @@ document.querySelector("#students-list").addEventListener("click", async (event)
 
   const resetButton = event.target.closest("[data-reset-student]");
   if (resetButton) {
-    const code = window.prompt("Zadej nový šestimístný kód a předej ho žákovi osobně:");
-    if (code === null) return;
-    if (!/^[0-9]{6}$/.test(code)) {
-      showNotice("Nový kód musí obsahovat přesně šest číslic.", true);
+    const password = window.prompt("Zadej nové heslo dlouhé 12 až 128 znaků a předej ho žákovi osobně:");
+    if (password === null) return;
+    if (password.length < 12 || password.length > 128) {
+      showNotice("Nové heslo musí mít 12 až 128 znaků.", true);
       return;
     }
     try {
-      await resetStudentCode(resetButton.dataset.resetStudent, code);
-      showNotice("Kód byl změněn. Žák se musí přihlásit novým kódem.");
+      await resetStudentPassword(resetButton.dataset.resetStudent, password);
+      showNotice("Heslo bylo změněno. Žák se musí přihlásit novým heslem.");
     } catch (error) {
       handleError(error);
     }

@@ -3,8 +3,9 @@ main = "src/index.js"
 compatibility_date = "2025-01-15"
 
 [vars]
-# Set APP_ORIGINS to exact origins, comma-separated (no path), before deployment.
-APP_ORIGINS = "https://YOUR-USERNAME.github.io"
+APP_ORIGINS = "https://mkytaran.github.io"
+SUPABASE_URL = "https://czfaibbnqcmglswmfayw.supabase.co"
+SUPABASE_PUBLISHABLE_KEY = "sb_publishable_Xm0b7n2jMtoLO-JWYWpKJQ_7i46l0Di"
 
 [[durable_objects.bindings]]
 name = "LOGIN_LIMITER"

@@ -1,161 +1,49 @@
-let accessToken = null;
-const pendingRequests = new Map();
-const CHANNEL = "kytarovy-klub";
-const SESSION_STORAGE_KEY = "kytarovy-klub-session";
+const API_URL = "https://kytarovy-klub-api.kytara.workers.dev/api/v2";
+const SESSION_STORAGE_KEY = "kytarovy-klub-supabase-session";
+const LEGACY_SESSION_STORAGE_KEY = "kytarovy-klub-session";
 const CAN_PERSIST_SESSION = window.parent === window;
-let standaloneBridgePromise = null;
 
-function isAppsScriptOrigin(origin) {
-  try {
-    const url = new URL(origin);
-    return url.protocol === "https:"
-      && (url.hostname === "script.google.com" || url.hostname.endsWith(".googleusercontent.com"));
-  } catch {
-    return false;
-  }
-}
+let accessToken = null;
 
-function appsScriptParentOrigin() {
-  if (window.parent === window || !document.referrer) {
-    throw new Error("Otevři Kytarový klub přes odkaz nasazené aplikace.");
-  }
-  const origin = new URL(document.referrer).origin;
-  if (!isAppsScriptOrigin(origin)) {
-    throw new Error("Aplikaci je potřeba otevřít přes zabezpečený odkaz Apps Scriptu.");
-  }
-  return origin;
-}
+if (CAN_PERSIST_SESSION) window.localStorage.removeItem(LEGACY_SESSION_STORAGE_KEY);
 
-function createAppsScriptBridge() {
-  const endpoint = document.querySelector('meta[name="apps-script-url"]')?.content;
-  let endpointUrl;
-  try {
-    endpointUrl = new URL(endpoint);
-  } catch {
-    throw new Error("Chybí platná URL nasazení Apps Scriptu.");
-  }
-  if (endpointUrl.protocol !== "https:" || endpointUrl.hostname !== "script.google.com"
-    || !/\/macros\/s\/[^/]+\/exec$/.test(endpointUrl.pathname)) {
-    throw new Error("URL nasazení Apps Scriptu není platná.");
-  }
-  const bridgeNonce = crypto.randomUUID();
-  endpointUrl.searchParams.set("bridge", "1");
-  endpointUrl.searchParams.set("bridge_nonce", bridgeNonce);
+async function request(path, { method = "GET", body, authenticated = true } = {}) {
+  const headers = {};
+  if (body !== undefined) headers["Content-Type"] = "application/json";
+  if (authenticated && accessToken) headers.Authorization = `Bearer ${accessToken}`;
 
-  const frame = document.createElement("iframe");
-  frame.title = "Spojení se zabezpečeným serverem";
-  frame.tabIndex = -1;
-  frame.setAttribute("aria-hidden", "true");
-  frame.style.cssText = "position:absolute;width:1px;height:1px;left:-10000px;border:0";
-  document.body.append(frame);
-
-  return new Promise((resolve, reject) => {
-    let settled = false;
-    const cleanup = () => {
-      clearTimeout(timeout);
-      window.removeEventListener("message", onBridgeMessage);
-      frame.removeEventListener("error", onFrameError);
-    };
-    const fail = (error) => {
-      if (settled) return;
-      settled = true;
-      cleanup();
-      frame.remove();
-      reject(error);
-    };
-    const onBridgeMessage = (event) => {
-      if (!isAppsScriptOrigin(event.origin)
-        || !event.data || event.data.channel !== CHANNEL || event.data.type !== "ready"
-        || event.data.bridgeNonce !== bridgeNonce) return;
-      settled = true;
-      cleanup();
-      resolve({ target: event.source, targetOrigin: event.origin, bridgeNonce });
-    };
-    const onFrameError = () => {
-      fail(new Error("Zabezpečený server se nepodařilo načíst."));
-    };
-    const timeout = setTimeout(() => {
-      fail(new Error("Zabezpečený server se neozval. Zkontroluj připojení a zkus to znovu."));
-    }, 60000);
-    window.addEventListener("message", onBridgeMessage);
-    frame.addEventListener("error", onFrameError, { once: true });
-    frame.src = endpointUrl.href;
+  const response = await fetch(`${API_URL}${path}`, {
+    method,
+    headers,
+    ...(body === undefined ? {} : { body: JSON.stringify(body) }),
+    cache: "no-store"
   });
-}
-
-function getStandaloneBridge() {
-  if (!standaloneBridgePromise) {
-    standaloneBridgePromise = Promise.resolve()
-      .then(createAppsScriptBridge)
-      .catch((error) => {
-        standaloneBridgePromise = null;
-        throw error;
-      });
+  let result;
+  try {
+    result = await response.json();
+  } catch {
+    throw new Error("Server vrátil neplatnou odpověď.");
   }
-  return standaloneBridgePromise;
-}
-
-function callServer(method, ...args) {
-  return (async () => {
-    const bridge = CAN_PERSIST_SESSION
-      ? await getStandaloneBridge()
-      : { target: window.parent, targetOrigin: appsScriptParentOrigin() };
-    const { target, targetOrigin } = bridge;
-    const id = crypto.randomUUID();
-    return new Promise((resolve, reject) => {
-      const timer = setTimeout(() => {
-        pendingRequests.delete(id);
-        reject(new Error("Apps Script neodpovídá. Zkontroluj připojení a zkus to znovu."));
-      }, 30000);
-
-      pendingRequests.set(id, {
-        resolve,
-        reject,
-        timer,
-        targetOrigin,
-        target,
-        bridgeNonce: bridge.bridgeNonce
-      });
-      window.addEventListener("message", receiveResponse);
-      target.postMessage({
-        channel: CHANNEL,
-        type: "request",
-        id,
-        method,
-        args,
-        ...(bridge.bridgeNonce ? { bridgeNonce: bridge.bridgeNonce } : {})
-      }, targetOrigin);
-    });
-  })();
-}
-
-function receiveResponse(event) {
-  const response = event.data;
-  if (!response || response.channel !== CHANNEL
-    || response.type !== "response" || typeof response.id !== "string") return;
-  const pending = pendingRequests.get(response.id);
-  if (!pending || event.source !== pending.target || event.origin !== pending.targetOrigin
-    || (pending.bridgeNonce && response.bridgeNonce !== pending.bridgeNonce)) return;
-
-  pendingRequests.delete(response.id);
-  clearTimeout(pending.timer);
-  if (pendingRequests.size === 0) window.removeEventListener("message", receiveResponse);
-
-  if (!response.result || typeof response.result.ok !== "boolean") {
-    pending.reject(new Error("Apps Script vrátil neplatnou odpověď."));
-  } else if (!response.result.ok) {
-    const error = new Error(response.result.error || "Požadavek se nepodařilo dokončit.");
-    error.status = response.result.status;
-    pending.reject(error);
-  } else {
-    pending.resolve(response.result.data);
+  if (!response.ok) {
+    const error = new Error(result.error || "Požadavek se nepodařilo dokončit.");
+    error.status = response.status;
+    throw error;
   }
+  return result;
 }
 
-export async function login(name, code) {
-  const result = await callServer("login", name, code);
-  accessToken = result.token;
-  if (CAN_PERSIST_SESSION) window.localStorage.setItem(SESSION_STORAGE_KEY, accessToken);
+function saveSession(token) {
+  accessToken = token;
+  if (CAN_PERSIST_SESSION) window.localStorage.setItem(SESSION_STORAGE_KEY, token);
+}
+
+export async function login(name, password) {
+  const result = await request("/auth/login", {
+    method: "POST",
+    body: { name, password },
+    authenticated: false
+  });
+  saveSession(result.token);
   return result.user;
 }
 
@@ -172,9 +60,8 @@ export async function restoreSession() {
 }
 
 export async function logout() {
-  const token = accessToken;
   try {
-    if (token) await callServer("logout", token);
+    if (accessToken) await request("/auth/logout", { method: "POST" });
   } finally {
     clearSession();
   }
@@ -185,34 +72,52 @@ export function clearSession() {
   if (CAN_PERSIST_SESSION) window.localStorage.removeItem(SESSION_STORAGE_KEY);
 }
 
-export function getClassData() {
-  return callServer("getClassData", accessToken);
+export async function getClassData() {
+  return request("/data");
 }
 
-export function addStudent(name, code, lessonDay) {
-  return callServer("addStudent", accessToken, name, code, lessonDay);
+export async function addStudent(name, password, lessonDay) {
+  return request("/students", {
+    method: "POST",
+    body: { name, password, lessonDay }
+  });
 }
 
-export function updateStudentLessonDay(studentId, lessonDay) {
-  return callServer("updateStudentLessonDay", accessToken, studentId, lessonDay);
+export async function updateStudentLessonDay(studentId, lessonDay) {
+  return request(`/students/${encodeURIComponent(studentId)}/lesson-day`, {
+    method: "PUT",
+    body: { lessonDay }
+  });
 }
 
-export function updateStudentAvatar(studentId, avatarId) {
-  return callServer("updateStudentAvatar", accessToken, studentId, avatarId);
+export async function updateStudentAvatar(studentId, avatarId) {
+  return request(`/students/${encodeURIComponent(studentId)}/avatar`, {
+    method: "PUT",
+    body: { avatarId }
+  });
 }
 
-export function deactivateStudent(studentId) {
-  return callServer("deactivateStudent", accessToken, studentId);
+export async function deactivateStudent(studentId) {
+  return request(`/students/${encodeURIComponent(studentId)}`, { method: "DELETE" });
 }
 
-export function resetStudentCode(studentId, code) {
-  return callServer("resetStudentCode", accessToken, studentId, code);
+export async function resetStudentPassword(studentId, password) {
+  return request(`/students/${encodeURIComponent(studentId)}/password`, {
+    method: "PUT",
+    body: { password }
+  });
 }
 
-export function recordScores(date, scores, type, reason) {
-  return callServer("recordScores", accessToken, date, scores, type, reason);
+export async function recordScores(date, scores, type, reason) {
+  return request("/scores", {
+    method: "POST",
+    body: { date, scores, type, reason }
+  });
 }
 
-export function selectAvatar(avatarId) {
-  return callServer("selectAvatar", accessToken, avatarId);
+export async function selectAvatar(avatarId) {
+  return request("/me/avatar", {
+    method: "PATCH",
+    body: { avatarId }
+  });
 }

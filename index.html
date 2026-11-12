@@ -8,7 +8,6 @@
     <meta name="robots" content="noindex, nofollow">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-title" content="Kytarový klub">
-    <meta name="apps-script-url" content="https://script.google.com/macros/s/AKfycbxaVuB7uXKhgH00kkxxdHyFRuVGl2m4YvISg-L5AFgIlCZJb6ruNfkJW47VeC-e9Qw3/exec">
     <title>Kytarový klub</title>
     <link rel="manifest" href="manifest.webmanifest">
     <link rel="icon" href="icons/guitar-192.png" type="image/png">
@@ -48,17 +47,17 @@
           <div class="login-copy">
             <p class="eyebrow">TŘÍDA KLASICKÉ KYTARY</p>
             <h1 id="login-title">Vítej v <span>Kytarovém klubu</span></h1>
-            <p class="login-description">Přihlas se svým jménem a kódem a podívej se, jak se celé třídě daří.</p>
+            <p class="login-description">Přihlas se svým jménem a heslem a podívej se, jak se celé třídě daří.</p>
             <form id="login-form" class="login-form">
               <label class="field-label" for="login-name">
                 Přihlašovací jméno
                 <input id="login-name" name="name" type="text" maxlength="80" autocomplete="off" autocapitalize="none" required>
               </label>
-              <label class="field-label" for="login-code">
-                Šestimístný kód
-                <input id="login-code" name="code" type="password" inputmode="numeric" pattern="[0-9]{6}" minlength="6" maxlength="6" autocomplete="off" aria-describedby="code-hint" required>
+              <label class="field-label" for="login-password">
+                Heslo
+                <input id="login-password" name="password" type="password" minlength="12" maxlength="128" autocomplete="current-password" aria-describedby="password-hint" required>
               </label>
-              <p class="login-hint" id="code-hint">Kód ti předá učitel. Po několika chybných pokusech se přihlášení dočasně uzamkne.</p>
+              <p class="login-hint" id="password-hint">Heslo ti předá učitel. Po několika chybných pokusech se přihlášení dočasně uzamkne.</p>
               <button class="button button-primary login-submit" type="submit">Přihlásit se <span aria-hidden="true">→</span></button>
             </form>
             <p class="privacy-note login-privacy"><span aria-hidden="true">🔒</span> Přihlášení zůstane na tomto zařízení do odhlášení. Na sdíleném zařízení se vždy odhlaš.</p>
@@ -132,16 +131,16 @@
             <div class="page-heading">
               <p class="eyebrow">KYTAROVÁ PARTA</p>
               <h1 id="students-title">Správa žáků <span class="heading-emoji" aria-hidden="true">🎸</span></h1>
-              <p>Učitel přidává účty a předává každému žákovi jeho přihlašovací kód.</p>
+              <p>Učitel přidává účty a každému žákovi nastaví heslo, které mu bezpečně předá.</p>
             </div>
             <form id="student-form" class="add-student-form">
               <label class="field-label" for="student-name">
                 Jméno a přihlašovací jméno
                 <input id="student-name" name="name" type="text" maxlength="80" placeholder="Např. Tereza Nová" autocomplete="off" required>
               </label>
-              <label class="field-label code-field" for="student-code">
-                Šestimístný kód
-                <input id="student-code" name="code" type="password" inputmode="numeric" pattern="[0-9]{6}" minlength="6" maxlength="6" autocomplete="off" required>
+              <label class="field-label" for="student-password">
+                Heslo (alespoň 12 znaků)
+                <input id="student-password" name="password" type="password" minlength="12" maxlength="128" autocomplete="new-password" required>
               </label>
               <label class="field-label lesson-day-field" for="student-lesson-day">
                 Den hodiny
