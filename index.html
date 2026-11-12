@@ -6,8 +6,13 @@
     <meta name="theme-color" content="#111827">
     <meta name="description" content="Soukromý motivační přehled pro třídu klasické kytary.">
     <meta name="robots" content="noindex, nofollow">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="Kytarový klub">
+    <meta name="apps-script-url" content="https://script.google.com/macros/s/AKfycbxaVuB7uXKhgH00kkxxdHyFRuVGl2m4YvISg-L5AFgIlCZJb6ruNfkJW47VeC-e9Qw3/exec">
     <title>Kytarový klub</title>
+    <link rel="manifest" href="manifest.webmanifest">
     <link rel="icon" href="icons/guitar.svg" type="image/svg+xml">
+    <link rel="apple-touch-icon" href="icons/guitar-192.png">
     <link rel="stylesheet" href="styles/base.css">
     <link rel="stylesheet" href="styles/layout.css">
     <link rel="stylesheet" href="styles/components.css">
@@ -19,6 +24,7 @@
           <img class="brand-mark" src="icons/guitar-photo.png" alt="">
           <span>Kytarový klub</span>
         </a>
+        <button class="install-button" id="install-button" type="button" hidden>Instalovat aplikaci</button>
         <nav class="main-nav" aria-label="Hlavní navigace" id="main-nav" hidden>
           <button class="nav-link is-active" type="button" data-page="prehled">Přehled</button>
           <button class="nav-link" type="button" data-page="body" data-role="teacher" hidden>Zapsat body</button>

@@ -12,12 +12,16 @@
     </style>
   </head>
   <body>
-    <iframe id="app-frame" src="<?= APP_URL ?>" data-app-origin="<?= APP_ORIGIN ?>"
-      referrerpolicy="strict-origin-when-cross-origin" title="Kytarový klub"></iframe>
+    <? if (!BRIDGE_MODE) { ?>
+      <iframe id="app-frame" src="<?= APP_URL ?>" data-app-origin="<?= APP_ORIGIN ?>"
+        referrerpolicy="strict-origin-when-cross-origin" title="Kytarový klub"></iframe>
+    <? } ?>
     <script>
       (() => {
+        const bridgeMode = <?= BRIDGE_MODE ?>;
+        const bridgeNonce = "<?= BRIDGE_NONCE ?>";
         const frame = document.querySelector("#app-frame");
-        const appOrigin = frame.dataset.appOrigin;
+        const appOrigin = "<?= APP_ORIGIN ?>";
         const allowedMethods = {
           login: "apiLogin",
           logout: "apiLogout",
@@ -31,18 +35,26 @@
 
         window.addEventListener("message", (event) => {
           const request = event.data;
-          if (event.source !== frame.contentWindow || event.origin !== appOrigin
+          const validSender = bridgeMode
+            ? event.source === window.top && event.origin === appOrigin
+              && request && request.bridgeNonce === bridgeNonce
+            : frame && event.source === frame.contentWindow && event.origin === appOrigin;
+          if (!validSender
             || !request || request.channel !== "kytarovy-klub" || request.type !== "request"
             || typeof request.id !== "string" || !/^[a-f0-9-]{36}$/i.test(request.id)
             || !Object.prototype.hasOwnProperty.call(allowedMethods, request.method) || !Array.isArray(request.args)
             || request.args.length > 3 || JSON.stringify(request).length > 16000) return;
 
-          const reply = (result) => frame.contentWindow.postMessage({
-            channel: "kytarovy-klub",
-            type: "response",
-            id: request.id,
-            result
-          }, appOrigin);
+          const reply = (result) => {
+            const response = {
+              channel: "kytarovy-klub",
+              type: "response",
+              id: request.id,
+              result
+            };
+            if (bridgeMode) response.bridgeNonce = bridgeNonce;
+            event.source.postMessage(response, appOrigin);
+          };
           const runner = google.script.run
             .withSuccessHandler(reply)
             .withFailureHandler(() => reply({
@@ -52,6 +64,14 @@
             }));
           runner[allowedMethods[request.method]].apply(runner, request.args);
         });
+
+        if (bridgeMode) {
+          window.top.postMessage({
+            channel: "kytarovy-klub",
+            type: "ready",
+            bridgeNonce
+          }, appOrigin);
+        }
       })();
     </script>
   </body>

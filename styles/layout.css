@@ -1,5 +1,5 @@
 .app-shell { width: min(1120px, calc(100% - 48px)); margin: 0 auto; }
-.topbar { min-height: 86px; display: flex; align-items: center; gap: 42px; }
+.topbar { min-height: 86px; display: flex; align-items: center; gap: 24px; }
 .brand { display: inline-flex; align-items: center; gap: 10px; color: var(--ink); text-decoration: none; font-weight: 800; font-family: "Manrope", sans-serif; white-space: nowrap; }
 .brand-mark { display: block; width: 42px; height: 42px; border: 2px solid #fff0c8; border-radius: 50%; background: var(--yellow); object-fit: cover; }
 .main-nav { display: flex; align-items: center; gap: 8px; }
@@ -55,7 +55,7 @@ main { min-height: calc(100vh - 150px); }
   .app-shell { width: min(100% - 32px, 600px); }
   .topbar { min-height: 72px; flex-wrap: wrap; gap: 12px; padding: 14px 0 8px; }
   .main-nav { order: 3; width: 100%; justify-content: space-between; gap: 2px; }
-  .account-actions { gap: 10px; }
+  .account-actions { gap: 10px; margin-left: auto; }
   .offline-label { font-size: 0; }
   .offline-label .status-dot { width: 9px; height: 9px; }
   .login-panel { grid-template-columns: 1fr; margin: 24px auto 40px; }

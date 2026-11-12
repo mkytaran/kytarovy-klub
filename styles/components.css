@@ -10,6 +10,8 @@
 .button-primary { color: var(--white); background: var(--ink); }
 .button-light { color: var(--ink); background: var(--yellow); }
 .text-button { padding: 8px 0; border: 0; color: var(--orange); background: transparent; cursor: pointer; font-size: 13px; font-weight: 700; }
+.install-button { flex-shrink: 0; padding: 9px 13px; border: 1px solid var(--line); border-radius: 10px; color: var(--ink); background: var(--white); cursor: pointer; font-size: 12px; font-weight: 700; }
+.install-button:hover { border-color: #d3d5d0; background: #f4f4f1; }
 .text-button span { padding-left: 4px; }
 .logout-button:hover { border-color: #d3d5d0; background: #f4f4f1; }
 

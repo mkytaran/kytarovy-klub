@@ -315,5 +315,40 @@ document.addEventListener("visibilitychange", () => {
 });
 
 if (window.parent === window) {
-  showNotice("Otevři Kytarový klub přes soukromý odkaz nasazené aplikace.", true);
+  const installButton = document.querySelector("#install-button");
+  let installPrompt;
+
+  window.addEventListener("beforeinstallprompt", (event) => {
+    event.preventDefault();
+    installPrompt = event;
+    installButton.hidden = false;
+  });
+
+  installButton.addEventListener("click", async () => {
+    if (!installPrompt) return;
+    installButton.disabled = true;
+    try {
+      installPrompt.prompt();
+      await installPrompt.userChoice;
+      installPrompt = null;
+      installButton.hidden = true;
+    } catch (error) {
+      console.error("Instalaci aplikace se nepodařilo spustit:", error);
+      showNotice("Instalaci aplikace se nepodařilo spustit.", true);
+    } finally {
+      installButton.disabled = false;
+    }
+  });
+
+  window.addEventListener("appinstalled", () => {
+    installPrompt = null;
+    installButton.hidden = true;
+  });
+
+  if ("serviceWorker" in navigator) {
+    navigator.serviceWorker.register("./sw.js").catch((error) => {
+      console.error("Registrace offline shellu selhala:", error);
+      showNotice("Aplikaci můžeš používat, ale její instalaci se nepodařilo připravit.", true);
+    });
+  }
 }

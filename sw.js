@@ -1,8 +1,9 @@
-const CACHE_NAME = "kytarovy-klub-v9";
+const CACHE_NAME = "kytarovy-klub-v10";
 const APP_SHELL = [
   "./",
   "./index.html",
   "./manifest.webmanifest",
+  "./sw.js",
   "./styles/base.css",
   "./styles/layout.css",
   "./styles/components.css",
@@ -12,6 +13,8 @@ const APP_SHELL = [
   "./scripts/stats.js",
   "./scripts/ui.js",
   "./icons/guitar.svg",
+  "./icons/guitar-192.png",
+  "./icons/guitar-512.png",
   "./icons/guitar-photo.png"
 ];
 
