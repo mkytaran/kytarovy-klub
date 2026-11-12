@@ -3,6 +3,7 @@ const pendingRequests = new Map();
 const CHANNEL = "kytarovy-klub";
 const SESSION_STORAGE_KEY = "kytarovy-klub-session";
 const CAN_PERSIST_SESSION = window.parent === window;
+let standaloneBridgePromise = null;
 
 function isAppsScriptOrigin(origin) {
   try {
@@ -48,45 +49,56 @@ function createAppsScriptBridge() {
   frame.style.cssText = "position:absolute;width:1px;height:1px;left:-10000px;border:0";
   document.body.append(frame);
 
-  let resolveReady;
-  let rejectReady;
-  let ready = false;
-  const readyPromise = new Promise((resolve, reject) => {
-    resolveReady = resolve;
-    rejectReady = reject;
+  return new Promise((resolve, reject) => {
+    let settled = false;
+    const cleanup = () => {
+      clearTimeout(timeout);
+      window.removeEventListener("message", onBridgeMessage);
+      frame.removeEventListener("error", onFrameError);
+    };
+    const fail = (error) => {
+      if (settled) return;
+      settled = true;
+      cleanup();
+      frame.remove();
+      reject(error);
+    };
+    const onBridgeMessage = (event) => {
+      if (!isAppsScriptOrigin(event.origin)
+        || !event.data || event.data.channel !== CHANNEL || event.data.type !== "ready"
+        || event.data.bridgeNonce !== bridgeNonce) return;
+      settled = true;
+      cleanup();
+      resolve({ target: event.source, targetOrigin: event.origin, bridgeNonce });
+    };
+    const onFrameError = () => {
+      fail(new Error("Zabezpečený server se nepodařilo načíst."));
+    };
+    const timeout = setTimeout(() => {
+      fail(new Error("Zabezpečený server se neozval. Zkontroluj připojení a zkus to znovu."));
+    }, 60000);
+    window.addEventListener("message", onBridgeMessage);
+    frame.addEventListener("error", onFrameError, { once: true });
+    frame.src = endpointUrl.href;
   });
-  const timeout = setTimeout(() => {
-    if (ready) return;
-    rejectReady(new Error("Zabezpečený server se neozval. Zkontroluj připojení a zkus to znovu."));
-  }, 20000);
-
-  window.addEventListener("message", function onBridgeMessage(event) {
-    if (!isAppsScriptOrigin(event.origin)
-      || !event.data || event.data.channel !== CHANNEL || event.data.type !== "ready"
-      || event.data.bridgeNonce !== bridgeNonce) return;
-    ready = true;
-    clearTimeout(timeout);
-    window.removeEventListener("message", onBridgeMessage);
-    resolveReady({ target: event.source, targetOrigin: event.origin, bridgeNonce });
-  });
-  frame.addEventListener("error", () => {
-    if (ready) return;
-    clearTimeout(timeout);
-    rejectReady(new Error("Zabezpečený server se nepodařilo načíst."));
-  }, { once: true });
-  frame.src = endpointUrl.href;
-  return readyPromise;
 }
 
-const standaloneBridge = window.parent === window
-  ? Promise.resolve().then(createAppsScriptBridge)
-  : null;
-standaloneBridge?.catch(() => {});
+function getStandaloneBridge() {
+  if (!standaloneBridgePromise) {
+    standaloneBridgePromise = Promise.resolve()
+      .then(createAppsScriptBridge)
+      .catch((error) => {
+        standaloneBridgePromise = null;
+        throw error;
+      });
+  }
+  return standaloneBridgePromise;
+}
 
 function callServer(method, ...args) {
   return (async () => {
-    const bridge = standaloneBridge
-      ? await standaloneBridge
+    const bridge = CAN_PERSIST_SESSION
+      ? await getStandaloneBridge()
       : { target: window.parent, targetOrigin: appsScriptParentOrigin() };
     const { target, targetOrigin } = bridge;
     const id = crypto.randomUUID();
