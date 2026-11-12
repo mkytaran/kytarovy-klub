@@ -9,6 +9,7 @@ import {
   resetStudentCode,
   restoreSession,
   selectAvatar,
+  updateStudentAvatar,
   updateStudentLessonDay
 } from "./api.js";
 import { getCurrentDate, getStudentStats } from "./stats.js";
@@ -300,6 +301,28 @@ document.querySelector("#score-type").addEventListener("change", syncScoreContro
 document.querySelector("#students-list").addEventListener("click", async (event) => {
   if (toggleStudentHistory(event)) return;
 
+  const saveAvatarButton = event.target.closest("[data-save-student-avatar]");
+  if (saveAvatarButton) {
+    const studentId = saveAvatarButton.dataset.saveStudentAvatar;
+    const select = document.querySelector(`[data-student-avatar="${CSS.escape(studentId)}"]`);
+    const student = classData.students.find((item) => item.id === studentId);
+    if (!student || !select || select.value === student.avatar) return;
+    saveAvatarButton.disabled = true;
+    try {
+      await updateStudentAvatar(studentId, select.value);
+      if (await refreshAfterMutation()) {
+        showNotice(`Avatar pro ${student.name} byl uložen.`);
+      } else if (currentUser) {
+        saveAvatarButton.disabled = false;
+        showNotice(`Avatar pro ${student.name} byl uložen, ale seznam se nepodařilo obnovit. Znovu načti aplikaci.`, true);
+      }
+    } catch (error) {
+      handleError(error);
+      saveAvatarButton.disabled = false;
+    }
+    return;
+  }
+
   const saveLessonDayButton = event.target.closest("[data-save-lesson-day]");
   if (saveLessonDayButton) {
     const studentId = saveLessonDayButton.dataset.saveLessonDay;
@@ -359,6 +382,14 @@ document.querySelector("#students-list").addEventListener("click", async (event)
 document.querySelector("#leaderboard").addEventListener("click", toggleStudentHistory);
 
 document.querySelector("#students-list").addEventListener("change", (event) => {
+  const avatarSelect = event.target.closest("[data-student-avatar]");
+  if (avatarSelect) {
+    const student = classData.students.find((item) => item.id === avatarSelect.dataset.studentAvatar);
+    const saveButton = document.querySelector(`[data-save-student-avatar="${CSS.escape(avatarSelect.dataset.studentAvatar)}"]`);
+    if (student && saveButton) saveButton.disabled = avatarSelect.value === student.avatar;
+    return;
+  }
+
   const select = event.target.closest("[data-lesson-day]");
   if (!select) return;
   const student = classData.students.find((item) => item.id === select.dataset.lessonDay);

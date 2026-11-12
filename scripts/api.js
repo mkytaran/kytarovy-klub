@@ -185,6 +185,10 @@ export function updateStudentLessonDay(studentId, lessonDay) {
   return callServer("updateStudentLessonDay", accessToken, studentId, lessonDay);
 }
 
+export function updateStudentAvatar(studentId, avatarId) {
+  return callServer("updateStudentAvatar", accessToken, studentId, avatarId);
+}
+
 export function deactivateStudent(studentId) {
   return callServer("deactivateStudent", accessToken, studentId);
 }

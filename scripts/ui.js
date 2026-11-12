@@ -160,6 +160,13 @@ export function renderStudents(students, rankedStudents, entries) {
         </button>
         ${renderStudentHistory(historyId, studentEntries, stats?.totalPoints ?? 0)}
         <div class="student-card-actions">
+          <div class="student-avatar-control">
+            <label class="sr-only" for="student-avatar-${escapeHtml(student.id)}">Avatar – ${escapeHtml(student.name)}</label>
+            <select id="student-avatar-${escapeHtml(student.id)}" data-student-avatar="${escapeHtml(student.id)}" aria-label="Avatar žáka ${escapeHtml(student.name)}">
+              ${AVATARS.map((avatar) => `<option value="${avatar.id}"${student.avatar === avatar.id ? " selected" : ""}>${avatar.emoji} ${avatar.name}</option>`).join("")}
+            </select>
+            <button class="student-action" type="button" data-save-student-avatar="${escapeHtml(student.id)}" disabled>Uložit avatar</button>
+          </div>
           <div class="student-day-control">
             <label class="sr-only" for="lesson-day-${escapeHtml(student.id)}">Den hodiny – ${escapeHtml(student.name)}</label>
             <select id="lesson-day-${escapeHtml(student.id)}" data-lesson-day="${escapeHtml(student.id)}">

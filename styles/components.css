@@ -73,6 +73,8 @@ button.leader-row:focus-visible { outline: 2px solid var(--orange); outline-offs
 .student-history-empty { margin: 10px 0 0; color: var(--muted); }
 .overview-student-history { margin: 0 20px 16px 115px; }
 .student-card-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.student-avatar-control { display: flex; align-items: center; gap: 6px; }
+.student-avatar-control select { min-height: 34px; max-width: 150px; padding: 0 7px; border: 1px solid var(--line); border-radius: 8px; color: var(--ink); background: var(--white); font-size: 11px; }
 .avatar-circle { display: grid; width: 48px; height: 48px; flex: 0 0 auto; place-items: center; border: 2px solid #fff; border-radius: 50%; background: #fff0c9; box-shadow: 0 0 0 1px #e7e7e1; font-size: 25px; }
 .avatar-large { width: 70px; height: 70px; font-size: 38px; }
 .avatar-picker-button { display: grid; aspect-ratio: 1; min-width: 0; place-items: center; padding: 3px; border: 2px solid transparent; border-radius: 50%; background: transparent; cursor: pointer; transition: transform .16s, border-color .16s, background .16s; }
