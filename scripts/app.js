@@ -83,7 +83,7 @@ async function endSession(message) {
 function showPage(name) {
   const studentPages = ["prehled", "profil", "historie"];
   const allowed = currentUser?.role === "teacher"
-    ? ["prehled", "body", "zaci", "historie"]
+    ? ["prehled", "body", "zaci", "profil", "historie"]
     : studentPages;
   if (!allowed.includes(name)) return;
 
@@ -118,9 +118,8 @@ function render() {
     );
     renderStudents(classData.students, stats);
     syncScoreControls();
-  } else {
-    renderProfile(currentUser);
   }
+  renderProfile(currentUser);
   renderHistory(classData, undefined, currentUser.role);
 }
 
@@ -164,7 +163,10 @@ function showAuthenticatedApp() {
   document.querySelector("#history-filter").hidden = !teacher;
   document.querySelector("#lesson-date").value = getCurrentDate();
   render();
-  showPage(teacher ? "prehled" : "prehled");
+  showPage(currentUser.avatarChosen ? "prehled" : "profil");
+  if (!currentUser.avatarChosen) {
+    showNotice("Nejdřív si vyber avatara. Později ho můžeš kdykoli změnit.");
+  }
   resetIdleTimer();
 }
 
@@ -353,7 +355,10 @@ document.querySelector("#avatar-picker").addEventListener("click", async (event)
     const result = await selectAvatar(button.dataset.avatar);
     currentUser = result.user;
     const student = classData.students.find((item) => item.id === currentUser.id);
-    if (student) student.avatar = currentUser.avatar;
+    if (student) {
+      student.avatar = currentUser.avatar;
+      student.avatarChosen = currentUser.avatarChosen;
+    }
     render();
     showNotice("Tvůj nový zvířecí parťák je vybraný! 🐾");
   } catch (error) {

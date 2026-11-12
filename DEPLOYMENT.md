@@ -17,12 +17,12 @@ Aplikace používá repozitář [mkytaran/kytarovy-klub](https://github.com/mkyt
    | `BOOTSTRAP_SECRET` | Samostatné náhodné tajemství alespoň 32 znaků |
 
    Tajemství ukládej jen do vlastností skriptu. Nevkládej je do souborů projektu, tabulky ani GitHubu. `APP_URL` musí být stránka z domény `*.github.io`.
-5. V editoru vyber `setupKytarovyKlub` a klikni na **Spustit**. Potvrď oprávnění. Skript vytvoří listy `Accounts` a `Scores` se správnými záhlavími. Při aktualizaci bezpečně doplní nové sloupce `lessonDay`, `type` a `reason`; dosavadní řádky a body ponechá. Pokud už list obsahuje jiné neprázdné záhlaví, skript skončí s chybou a data nepřepíše. Přípravu lze později zopakovat z nabídky **Kytarový klub → Připravit tabulku**.
+5. V editoru vyber `setupKytarovyKlub` a klikni na **Spustit**. Potvrď oprávnění. Skript vytvoří listy `Accounts` a `Scores` se správnými záhlavími. Při aktualizaci bezpečně doplní nové sloupce `lessonDay`, `avatarChosen`, `type` a `reason`; dosavadní řádky a body ponechá. Stávající účty označí jako již vybrané, novým účtům nabídne výběr avatara při prvním přihlášení. Pokud už list obsahuje jiné neprázdné záhlaví, skript skončí s chybou a data nepřepíše. Přípravu lze později zopakovat z nabídky **Kytarový klub → Připravit tabulku**.
 6. Vyber `setupTeacherAccount` a spusť jej. Zadej jméno učitele, šestimístný číselný kód a dočasné bootstrap tajemství. Po vytvoření prvního účtu se `BOOTSTRAP_SECRET` automaticky odstraní. Kód si bezpečně poznamenej; tabulka ukládá jen jeho HMAC otisk.
 
 Hlavičky, které skript vytvoří:
 
-- `Accounts`: `id | name | normalizedName | role | pinSalt | pinHash | avatar | active | authVersion | createdAt | lessonDay`
+- `Accounts`: `id | name | normalizedName | role | pinSalt | pinHash | avatar | active | authVersion | createdAt | lessonDay | avatarChosen`
 - `Scores`: `id | studentId | studentName | score | date | createdAt | type | reason`
 
 Soubor `Kód.gs` je záměrně v `.gitignore`; zkopíruj ho ručně do editoru Apps Scriptu. Ostatní zdrojové soubory, včetně `Host.html`, jsou veřejné. Do nich tajemství nepatří.
