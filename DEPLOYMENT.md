@@ -1,73 +1,60 @@
 # Nasazení Kytarového klubu
 
-Aplikace používá repozitář [mkytaran/kytarovy-klub](https://github.com/mkytaran/kytarovy-klub) a GitHub Pages pro veřejné statické soubory; Google Apps Script zajišťuje přihlášení a práci se soukromou tabulkou. Žáci ji otevírají přes URL nasazené webové aplikace Apps Scriptu, která vloží stránku GitHub Pages do rámce a zprostředkuje volání serveru. Samotný přístup na GitHub Pages API nepovolí.
+Aplikace používá GitHub Pages pro statické soubory, Cloudflare Worker pro API a Supabase pro účty a data.
 
-## 1. Připrav soukromou Google tabulku
+## Požadavky
 
-1. Vytvoř novou Google tabulku a ponech ji soukromou.
-2. Otevři **Rozšíření → Apps Script**. V projektu vytvoř nebo nahraď soubor `Kód.gs` obsahem stejnojmenného souboru z projektu.
-3. Vytvoř HTML soubor s názvem `Host` a vlož do něj obsah místního souboru `Host.html`.
-4. V Apps Scriptu otevři **Nastavení projektu → Vlastnosti skriptu** a přidej:
+- GitHub Pages zapnuté pro větev `main` a kořen repozitáře. Veřejná adresa aplikace je `https://mkytaran.github.io/kytarovy-klub/`.
+- Worker `kytarovy-klub-api` nasazený z adresáře `worker` příkazem `npx wrangler deploy`.
+- Supabase projekt s aplikovanými migracemi `supabase/migrations/001_initial_schema.sql` a `002_session_version.sql`.
+- Tajemství Workeru `SUPABASE_SECRET_KEY` nastavené pomocí `npx wrangler secret put SUPABASE_SECRET_KEY`. Použij Supabase secret key; nikdy ho nevkládej do souborů ani GitHubu.
 
-   | Název | Hodnota |
-   |---|---|
-   | `SPREADSHEET_ID` | ID tabulky z její URL |
-   | `PIN_PEPPER` | Náhodné tajemství alespoň 32 znaků |
-   | `APP_URL` | `https://mkytaran.github.io/kytarovy-klub/` |
-   | `BOOTSTRAP_SECRET` | Samostatné náhodné tajemství alespoň 32 znaků |
+`worker/wrangler.toml` obsahuje veřejné nastavení Supabase URL, publishable key, povolený původ aplikace a Durable Object bindingy. Tajemství ukládej jako Cloudflare Worker secrets.
 
-   Tajemství ukládej jen do vlastností skriptu. Nevkládej je do souborů projektu, tabulky ani GitHubu. `APP_URL` musí být stránka z domény `*.github.io`.
-5. V editoru vyber `setupKytarovyKlub` a klikni na **Spustit**. Potvrď oprávnění. Skript vytvoří listy `Accounts` a `Scores` se správnými záhlavími. Při aktualizaci bezpečně doplní nové sloupce `lessonDay`, `avatarChosen`, `type` a `reason`; dosavadní řádky a body ponechá. Stávající účty označí jako již vybrané, novým účtům nabídne výběr avatara při prvním přihlášení. Pokud už list obsahuje jiné neprázdné záhlaví, skript skončí s chybou a data nepřepíše. Přípravu lze později zopakovat z nabídky **Kytarový klub → Připravit tabulku**.
-6. Vyber `setupTeacherAccount` a spusť jej. Zadej jméno učitele, šestimístný číselný kód a dočasné bootstrap tajemství. Po vytvoření prvního účtu se `BOOTSTRAP_SECRET` automaticky odstraní. Kód si bezpečně poznamenej; tabulka ukládá jen jeho HMAC otisk.
+## První vytvoření učitelského účtu
 
-Hlavičky, které skript vytvoří:
+Pokud v `public.profiles` ještě není učitelský účet:
 
-- `Accounts`: `id | name | normalizedName | role | pinSalt | pinHash | avatar | active | authVersion | createdAt | lessonDay | avatarChosen`
-- `Scores`: `id | studentId | studentName | score | date | createdAt | type | reason`
+1. V adresáři `worker` nastav jednorázové náhodné tajemství alespoň 32 znaků:
 
-Soubor `Kód.gs` je záměrně v `.gitignore`; zkopíruj ho ručně do editoru Apps Scriptu. Ostatní zdrojové soubory, včetně `Host.html`, jsou veřejné. Do nich tajemství nepatří.
+   ```sh
+   npx wrangler secret put SUPABASE_BOOTSTRAP_SECRET
+   ```
 
-## 2. Nahraj statickou aplikaci na GitHub Pages
+2. Spusť `node bootstrap-teacher.mjs`. Skript skrytě vyžádá bootstrap tajemství, jméno učitele a heslo dvakrát. Tajemství musí přesně odpovídat hodnotě nastavené v předchozím kroku; heslo musí mít 12 až 128 znaků.
+3. Po úspěšném vytvoření učitele tajemství ihned odstraň:
 
-Nahraj soubory webové aplikace do repozitáře [mkytaran/kytarovy-klub](https://github.com/mkytaran/kytarovy-klub). V nastavení repozitáře otevři **Settings → Pages**, zapni sestavení z větve `main` a složky `/(root)` a ulož. Po zveřejnění bude adresa aplikace:
+   ```sh
+   npx wrangler secret delete SUPABASE_BOOTSTRAP_SECRET
+   ```
 
-`https://mkytaran.github.io/kytarovy-klub/`
+Skript vytvoří účet v Supabase projektu nastaveném pro Worker. Bootstrap funguje pouze tehdy, když učitelský účet ještě neexistuje. Nevytvářej druhý účet, pokud už jeden existuje.
 
-Tato adresa musí přesně odpovídat vlastnosti `APP_URL` v Apps Scriptu. V `index.html` je také veřejná URL nasazení Apps Scriptu v metaznačce `apps-script-url`; pokud vytvoříš nové nasazení s jinou URL, aktualizuj ji a nahraj stránku znovu. Přímé otevření stránky na GitHub Pages nyní funguje samostatně a lze ji nainstalovat jako PWA.
+## Obnovení hesla učitele
 
-## 3. Nasaď Apps Script
+Pokud učitelský účet existuje, ale heslo je potřeba změnit:
 
-1. Zkopíruj aktuální `Kód.gs` a `Host.html` do projektu Apps Scriptu.
-2. Spusť `setupKytarovyKlub` v editoru Apps Scriptu; tím se bezpečně doplní nové sloupce do stávající tabulky.
-3. V Apps Scriptu klikni na **Nasadit → Spravovat nasazení**, uprav nasazení webové aplikace na novou verzi a nasaď změny. Pokud nasazení ještě neexistuje, klikni na **Nové nasazení** a jako typ vyber **Webová aplikace**.
-4. Nastav **Spustit jako: Já** a přístup pro **Kdokoli**. Díky tomu žáci nepotřebují Google účet; jejich oprávnění ověřuje aplikace. Pokud pravidla účtu nebo školy veřejný přístup nedovolují, nasazení takto nepůjde použít.
-5. URL nasazení končící `/exec` musí souhlasit s metaznačkou `apps-script-url` v `index.html`. Pokud se změnila, uprav ji a publikuj změnu na GitHub Pages.
-6. Stránku `https://mkytaran.github.io/kytarovy-klub/` otevři v podporovaném prohlížeči a zvol **Instalovat aplikaci** nebo **Přidat na plochu**. Na iPhonu/iPadu použij v Safari **Sdílet → Přidat na plochu**. Původní odkaz `/exec` zůstává funkční jako webová verze.
+1. Nastav nové dočasné tajemství pomocí `npx wrangler secret put SUPABASE_BOOTSTRAP_SECRET`.
+2. V adresáři `worker` spusť `node reset-teacher-password.mjs`. Skript skrytě vyžádá tajemství a nové heslo dvakrát.
+3. Po úspěšném resetu tajemství odstraň příkazem `npx wrangler secret delete SUPABASE_BOOTSTRAP_SECRET`.
 
-## Soukromí a omezení
+Reset vyžaduje právě jeden aktivní účet učitele. Jestliže účet chybí, použij první vytvoření účtu; jestliže účet existuje, ale není aktivní, ověř jeho stav v `public.profiles`.
 
-- Tabulka musí zůstat soukromá. Přístup k ní má vlastník Apps Scriptu; nesdílej ji se žáky.
-- Kódy mají přesně šest číslic. Aplikace ukládá HMAC otisky chráněné `PIN_PEPPER`, nikoli čitelné kódy.
-- Žáci vidí své zápisy a třídní žebříček; učitel vidí historii celé třídy a spravuje žáky.
-- U běžných bodů server povolí nejvýše jeden zápis na žáka v kalendářním týdnu od pondělí do neděle. Mimořádné zápisy (např. koncert) jsou samostatný typ s povinným důvodem a do limitu se nepočítají.
-- PWA na tomto zařízení ukládá přihlašovací token v místním úložišti, nikdy ne PIN; vložená webová verze drží token jen v paměti. Přihlášení v PWA se obnoví po zavření a opětovném otevření aplikace a skončí ručním odhlášením. Serverovou relaci prodlužuje při každém požadavku; po šesti hodinách bez kontaktu (např. při dlouhém zavření aplikace) je nutné se znovu přihlásit. Po změně kódu nebo odebrání účtu se stará relace zneplatní. Na sdíleném zařízení se vždy odhlaš.
-- Apps Script omezuje neúspěšná přihlášení na pět pokusů pro jméno a šedesát pokusů za patnáct minut pro neznámá jména. Limity používají dočasnou cache a mohou se při jejím vyprázdnění uvolnit; Google Apps Script navíc neposkytuje této aplikaci spolehlivou IP adresu klienta. Ochrana proti automatizovanému hádání proto není tak robustní jako u specializovaného API. Šestimístné kódy předávej soukromě.
-- Service worker ukládá do cache pouze veřejné soubory aplikace. Přihlašovací údaje ani data třídy se neukládají; přihlašovací token je uložen odděleně v místním úložišti, aby šlo relaci obnovit. Aplikaci lze otevřít i bez připojení, ale přihlášení a práce s daty vyžadují internet.
-- Apps Script má kvóty a limity souběžných běhů; pro malou třídu obvykle postačí, ale nejde o službu s garantovanou dostupností.
+## Zveřejnění změn
+
+1. Nahraj změny statické aplikace do větve `main`; GitHub Pages je zveřejní na `https://mkytaran.github.io/kytarovy-klub/`.
+2. Změny Workeru nasaď z adresáře `worker` příkazem `npx wrangler deploy`.
+3. Po změně databázového schématu aplikuj příslušnou SQL migraci v Supabase SQL Editoru.
+
+Bootstrap skript a resetovací skript jsou v `worker/`. Pro samotné přihlášení ani běžný provoz není bootstrap tajemství potřeba. Nikdy neukládej hesla ani tajemství do repozitáře.
+
+## Soukromí a provoz
+
+- Supabase ukládá profily a bodové zápisy. Tajný Supabase klíč má pouze Worker; nepoužívej ho v klientském JavaScriptu.
+- Přihlašovací heslo má 12 až 128 znaků. Učitelské a žákovské účty se přihlašují jménem a heslem.
+- Přihlášení je chráněno limitem pěti chybných pokusů na účet a šedesáti na IP adresu během 15 minut. Po dosažení limitu se přihlášení dočasně uzamkne.
+- PWA ukládá přihlašovací token v místním úložišti, nikdy heslo. Service worker ukládá pouze veřejné soubory aplikace. Na sdíleném zařízení se vždy odhlaš.
+- Relace vyprší po osmi hodinách bez kontaktu se serverem. Změna hesla nebo deaktivace účtu zneplatní staré relace.
+- Aplikaci lze otevřít offline, ale přihlášení a práce s daty vyžadují internet.
 
 Před ukládáním údajů nezletilých ověř pravidla školy a požadavky na ochranu osobních údajů pro použité služby.
-
-## Nový provoz na Supabase
-
-Nová verze webové aplikace komunikuje přímo s `/api/v2/` v Cloudflare Workeru. Účty a body ze staré Google tabulky se nepřevádějí; tabulka zůstává nedotčená jako archiv. Nová třída začíná bez žáků a bez historie.
-
-Supabase schéma, Worker, tajný klíč Supabase a účet učitele už byly připravené. Po zveřejnění této verze webu:
-
-1. Přihlas se účtem učitele Michal Novák a jeho heslem Supabase.
-2. Na stránce **Správa žáků** založ každého žáka znovu. Nastav heslo dlouhé alespoň 12 znaků a předej ho soukromě. Staré šestimístné kódy pro nový systém neplatí.
-3. Jakmile ověříš přihlášení, správu účtů a zápis bodů, můžeš Google tabulku ponechat jako archiv. Její service account, Google Sheets API ani Google klíč nejsou pro novou verzi potřeba.
-4. Bootstrap tajemství `SUPABASE_BOOTSTRAP_SECRET` po vytvoření učitele smaž příkazem `npx wrangler secret delete SUPABASE_BOOTSTRAP_SECRET`; nová aplikace ho k běžnému provozu nepotřebuje. Tajemství `SUPABASE_SECRET_KEY` ponech.
-
-### Obnovení hesla učitele
-
-Pokud se učitel nemůže přihlásit, nastav nové náhodné `SUPABASE_BOOTSTRAP_SECRET` (alespoň 32 znaků), nasaď Worker a spusť `node reset-teacher-password.mjs` v adresáři `worker`. Skript bezpečně skryje bootstrap tajemství i nové heslo; po úspěšné změně bootstrap secret smaž. Staré relace se při změně hesla zneplatní.
