@@ -57,7 +57,15 @@
 .form-footer { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding-top: 18px; border-top: 1px solid var(--line); }
 .add-student-form .button { flex-shrink: 0; }
 .student-card { display: grid; gap: 14px; min-width: 0; padding: 17px; border: 1px solid var(--line); border-radius: 16px; background: var(--white); }
-.student-card-heading { display: flex; min-width: 0; align-items: center; gap: 12px; }
+.student-card-heading { display: flex; width: 100%; min-width: 0; align-items: center; gap: 12px; padding: 0; border: 0; color: inherit; background: transparent; text-align: left; cursor: pointer; }
+.student-card-heading:focus-visible { outline: 2px solid var(--orange); outline-offset: 4px; border-radius: 4px; }
+.student-history-hint { color: var(--orange) !important; }
+.student-history { padding: 12px; border-radius: 11px; background: #f8f8f5; font-size: 12px; }
+.student-history[hidden] { display: none; }
+.student-history-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 12px; padding-top: 10px; }
+.student-history-row time { color: var(--muted); font-size: 11px; }
+.student-history-row .points-pill { padding: 5px 8px; }
+.student-history-empty { margin: 10px 0 0; color: var(--muted); }
 .student-card-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
 .avatar-circle { display: grid; width: 48px; height: 48px; flex: 0 0 auto; place-items: center; border: 2px solid #fff; border-radius: 50%; background: #fff0c9; box-shadow: 0 0 0 1px #e7e7e1; font-size: 25px; }
 .avatar-large { width: 70px; height: 70px; font-size: 38px; }

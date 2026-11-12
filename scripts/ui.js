@@ -106,7 +106,7 @@ export function updateScoreAvailability(entries, date, type) {
   });
 }
 
-export function renderStudents(students, rankedStudents) {
+export function renderStudents(students, rankedStudents, entries) {
   const container = document.querySelector("#students-list");
   if (students.length === 0) {
     container.innerHTML = emptyState("Přidej prvního kytaristu", "Žádné známky ani učivo – jen jména a radost z pokroku.");
@@ -120,13 +120,31 @@ export function renderStudents(students, rankedStudents) {
     .map((student) => {
       const stats = statsById.get(student.id);
       const level = getLevel(stats?.totalPoints ?? 0);
+      const studentEntries = entries
+        .filter((entry) => entry.studentId === student.id)
+        .slice()
+        .sort((a, b) => b.date.localeCompare(a.date) || b.createdAt.localeCompare(a.createdAt));
+      const historyId = `student-history-${student.id}`;
       return `<article class="student-card">
-        <div class="student-card-heading">
+        <button class="student-card-heading" type="button" data-student-history="${escapeHtml(historyId)}" aria-expanded="false" aria-controls="${escapeHtml(historyId)}" aria-label="Zobrazit dosavadní body žáka ${escapeHtml(student.name)}">
           <span class="student-avatar" aria-hidden="true">${avatarEmoji(student.avatar)}</span>
           <div class="student-info">
             <strong>${escapeHtml(student.name)}</strong>
             <span>${stats?.totalPoints ?? 0} bodů · ${level.name} · ${student.lessonDay ? lessonDayName(student.lessonDay) : "den hodiny nenastaven"}</span>
+            <span class="student-history-hint">Zobrazit dosavadní body</span>
           </div>
+        </button>
+        <div class="student-history" id="${escapeHtml(historyId)}" hidden>
+          <strong>Dosavadní body: ${stats?.totalPoints ?? 0} ${plural(stats?.totalPoints ?? 0, "bod", "body", "bodů")}</strong>
+          ${studentEntries.length > 0
+    ? studentEntries.map((entry) => `<div class="student-history-row">
+            <span>
+              <time datetime="${escapeHtml(entry.date)}">${formatDate(entry.date)}</time>
+              ${entry.type === "extra" ? `<small class="history-extra">Mimořádné body · ${escapeHtml(entry.reason)}</small>` : ""}
+            </span>
+            <span class="points-pill">＋${entry.score} ${plural(entry.score, "bod", "body", "bodů")}</span>
+          </div>`).join("")
+    : `<p class="student-history-empty">Zatím nemá žádné bodové zápisy.</p>`}
         </div>
         <div class="student-card-actions">
           <div class="student-day-control">

@@ -104,7 +104,7 @@ function render() {
       document.querySelector("#lesson-date").value,
       document.querySelector("#score-type").value
     );
-    renderStudents(classData.students, stats);
+    renderStudents(classData.students, stats, classData.entries);
     syncScoreControls();
   }
   renderProfile(currentUser);
@@ -270,6 +270,19 @@ document.querySelector("#lesson-date").addEventListener("change", syncScoreContr
 document.querySelector("#score-type").addEventListener("change", syncScoreControls);
 
 document.querySelector("#students-list").addEventListener("click", async (event) => {
+  const historyButton = event.target.closest("[data-student-history]");
+  if (historyButton) {
+    const history = document.querySelector(`#${CSS.escape(historyButton.dataset.studentHistory)}`);
+    if (!history) return;
+    const expanded = historyButton.getAttribute("aria-expanded") !== "true";
+    historyButton.setAttribute("aria-expanded", String(expanded));
+    historyButton.querySelector(".student-history-hint").textContent = expanded
+      ? "Skrýt dosavadní body"
+      : "Zobrazit dosavadní body";
+    history.hidden = !expanded;
+    return;
+  }
+
   const saveLessonDayButton = event.target.closest("[data-save-lesson-day]");
   if (saveLessonDayButton) {
     const studentId = saveLessonDayButton.dataset.saveLessonDay;
