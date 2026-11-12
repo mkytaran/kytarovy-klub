@@ -4,7 +4,7 @@ export function getStudentStats(state) {
     return {
       ...student,
       totalPoints: student.totalPoints ?? entries.reduce((sum, entry) => sum + entry.score, 0),
-      lessonCount: student.lessonCount ?? entries.length
+      lessonCount: student.lessonCount ?? entries.filter((entry) => (entry.type || "lesson") === "lesson").length
     };
   }).sort((a, b) => b.totalPoints - a.totalPoints || a.name.localeCompare(b.name, "cs"));
 }

@@ -17,13 +17,13 @@ Aplikace používá repozitář [mkytaran/kytarovy-klub](https://github.com/mkyt
    | `BOOTSTRAP_SECRET` | Samostatné náhodné tajemství alespoň 32 znaků |
 
    Tajemství ukládej jen do vlastností skriptu. Nevkládej je do souborů projektu, tabulky ani GitHubu. `APP_URL` musí být stránka z domény `*.github.io`.
-5. V editoru vyber `setupKytarovyKlub` a klikni na **Spustit**. Potvrď oprávnění. Skript vytvoří listy `Accounts` a `Scores` se správnými záhlavími. Pokud už list obsahuje jiné neprázdné záhlaví, skript skončí s chybou a data nepřepíše. Přípravu lze později zopakovat z nabídky **Kytarový klub → Připravit tabulku**.
+5. V editoru vyber `setupKytarovyKlub` a klikni na **Spustit**. Potvrď oprávnění. Skript vytvoří listy `Accounts` a `Scores` se správnými záhlavími. Při aktualizaci bezpečně doplní nové sloupce `lessonDay`, `type` a `reason`; dosavadní řádky a body ponechá. Pokud už list obsahuje jiné neprázdné záhlaví, skript skončí s chybou a data nepřepíše. Přípravu lze později zopakovat z nabídky **Kytarový klub → Připravit tabulku**.
 6. Vyber `setupTeacherAccount` a spusť jej. Zadej jméno učitele, šestimístný číselný kód a dočasné bootstrap tajemství. Po vytvoření prvního účtu se `BOOTSTRAP_SECRET` automaticky odstraní. Kód si bezpečně poznamenej; tabulka ukládá jen jeho HMAC otisk.
 
 Hlavičky, které skript vytvoří:
 
-- `Accounts`: `id | name | normalizedName | role | pinSalt | pinHash | avatar | active | authVersion | createdAt`
-- `Scores`: `id | studentId | studentName | score | date | createdAt`
+- `Accounts`: `id | name | normalizedName | role | pinSalt | pinHash | avatar | active | authVersion | createdAt | lessonDay`
+- `Scores`: `id | studentId | studentName | score | date | createdAt | type | reason`
 
 Soubor `Kód.gs` je záměrně v `.gitignore`; zkopíruj ho ručně do editoru Apps Scriptu. Ostatní zdrojové soubory, včetně `Host.html`, jsou veřejné. Do nich tajemství nepatří.
 
@@ -38,16 +38,18 @@ Tato adresa musí přesně odpovídat vlastnosti `APP_URL` v Apps Scriptu. V `in
 ## 3. Nasaď Apps Script
 
 1. Zkopíruj aktuální `Kód.gs` a `Host.html` do projektu Apps Scriptu.
-2. V Apps Scriptu klikni na **Nasadit → Spravovat nasazení**, uprav nasazení webové aplikace na novou verzi a nasaď změny. Pokud nasazení ještě neexistuje, klikni na **Nové nasazení** a jako typ vyber **Webová aplikace**.
-3. Nastav **Spustit jako: Já** a přístup pro **Kdokoli**. Díky tomu žáci nepotřebují Google účet; jejich oprávnění ověřuje aplikace. Pokud pravidla účtu nebo školy veřejný přístup nedovolují, nasazení takto nepůjde použít.
-4. URL nasazení končící `/exec` musí souhlasit s metaznačkou `apps-script-url` v `index.html`. Pokud se změnila, uprav ji a publikuj změnu na GitHub Pages.
-5. Stránku `https://mkytaran.github.io/kytarovy-klub/` otevři v podporovaném prohlížeči a zvol **Instalovat aplikaci** nebo **Přidat na plochu**. Na iPhonu/iPadu použij v Safari **Sdílet → Přidat na plochu**. Původní odkaz `/exec` zůstává funkční jako webová verze.
+2. Spusť `setupKytarovyKlub` v editoru Apps Scriptu; tím se bezpečně doplní nové sloupce do stávající tabulky.
+3. V Apps Scriptu klikni na **Nasadit → Spravovat nasazení**, uprav nasazení webové aplikace na novou verzi a nasaď změny. Pokud nasazení ještě neexistuje, klikni na **Nové nasazení** a jako typ vyber **Webová aplikace**.
+4. Nastav **Spustit jako: Já** a přístup pro **Kdokoli**. Díky tomu žáci nepotřebují Google účet; jejich oprávnění ověřuje aplikace. Pokud pravidla účtu nebo školy veřejný přístup nedovolují, nasazení takto nepůjde použít.
+5. URL nasazení končící `/exec` musí souhlasit s metaznačkou `apps-script-url` v `index.html`. Pokud se změnila, uprav ji a publikuj změnu na GitHub Pages.
+6. Stránku `https://mkytaran.github.io/kytarovy-klub/` otevři v podporovaném prohlížeči a zvol **Instalovat aplikaci** nebo **Přidat na plochu**. Na iPhonu/iPadu použij v Safari **Sdílet → Přidat na plochu**. Původní odkaz `/exec` zůstává funkční jako webová verze.
 
 ## Soukromí a omezení
 
 - Tabulka musí zůstat soukromá. Přístup k ní má vlastník Apps Scriptu; nesdílej ji se žáky.
 - Kódy mají přesně šest číslic. Aplikace ukládá HMAC otisky chráněné `PIN_PEPPER`, nikoli čitelné kódy.
 - Žáci vidí své zápisy a třídní žebříček; učitel vidí historii celé třídy a spravuje žáky.
+- U běžných bodů server povolí nejvýše jeden zápis na žáka v kalendářním týdnu od pondělí do neděle. Mimořádné zápisy (např. koncert) jsou samostatný typ s povinným důvodem a do limitu se nepočítají.
 - Přihlášení se uchovává pouze v paměti stránky a nejvýše šest hodin. Po změně kódu nebo odebrání účtu se stará relace zneplatní.
 - Apps Script omezuje neúspěšná přihlášení na pět pokusů pro jméno a šedesát pokusů za patnáct minut pro neznámá jména. Limity používají dočasnou cache a mohou se při jejím vyprázdnění uvolnit; Google Apps Script navíc neposkytuje této aplikaci spolehlivou IP adresu klienta. Ochrana proti automatizovanému hádání proto není tak robustní jako u specializovaného API. Šestimístné kódy předávej soukromě.
 - Service worker ukládá do cache pouze veřejné soubory aplikace. Přihlašovací údaje, relace ani data třídy se do cache ani místního úložiště neukládají. Aplikaci lze otevřít i bez připojení, ale přihlášení a veškerá práce s daty vyžadují internet.

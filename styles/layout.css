@@ -39,10 +39,11 @@ main { min-height: calc(100vh - 150px); }
 .page-heading { margin: 24px 0 30px; }
 .page-heading > p:last-child { margin-bottom: 0; color: var(--muted); }
 .form-card, .history-card { padding: 26px; border: 1px solid var(--line); border-radius: 20px; background: var(--white); box-shadow: var(--shadow); }
-.add-student-form { display: flex; align-items: end; gap: 14px; max-width: 680px; padding: 24px; border: 1px solid var(--line); border-radius: 18px; background: var(--white); }
+.add-student-form { display: flex; align-items: end; gap: 14px; max-width: 980px; padding: 24px; border: 1px solid var(--line); border-radius: 18px; background: var(--white); }
 .add-student-form .field-label { flex: 1; }
 .students-list { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; margin-top: 22px; }
 .code-field { width: 150px; }
+.lesson-day-field { max-width: 190px; }
 .profile-card { padding: 28px; border: 1px solid var(--line); border-radius: 20px; background: var(--white); box-shadow: var(--shadow); }
 .profile-current { display: flex; align-items: center; gap: 16px; padding-bottom: 22px; border-bottom: 1px solid var(--line); }
 .profile-current h2 { margin: 0; font-size: 20px; }

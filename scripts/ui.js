@@ -20,7 +20,7 @@ export function renderOverview(state, currentUser) {
     ? [
       statCard("Žáků ve třídě", state.students.length, "🎸"),
       statCard("Rozdaných bodů", points, "⭐"),
-      statCard("Pochval za lekce", state.entries.length, "👏")
+      statCard("Bodových zápisů", state.entries.length, "👏")
     ]
     : [
       statCard("Moje body", myStats?.totalPoints ?? 0, "⭐"),
@@ -55,7 +55,17 @@ function statCard(label, value, icon) {
   </article>`;
 }
 
-export function renderScoreForm(students) {
+const LESSON_DAYS = [
+  ["monday", "Pondělí"],
+  ["tuesday", "Úterý"],
+  ["wednesday", "Středa"],
+  ["thursday", "Čtvrtek"],
+  ["friday", "Pátek"],
+  ["saturday", "Sobota"],
+  ["sunday", "Neděle"]
+];
+
+export function renderScoreForm(students, entries, date, type) {
   const container = document.querySelector("#score-students");
   if (students.length === 0) {
     container.innerHTML = emptyState("Zatím tu nikdo není", "Nejdřív přidej žáky, kterým budeš body zapisovat.");
@@ -65,12 +75,35 @@ export function renderScoreForm(students) {
   document.querySelector("#score-form button[type=submit]").disabled = false;
   container.innerHTML = students.map((student) => `<label class="score-student">
     <span class="student-avatar" aria-hidden="true">${avatarEmoji(student.avatar)}</span>
-    <span class="score-student-name">${escapeHtml(student.name)}</span>
+    <span class="score-student-details">
+      <span class="score-student-name">${escapeHtml(student.name)}</span>
+      <span class="score-student-day">${student.lessonDay ? `Hodina: ${lessonDayName(student.lessonDay)}` : "Den hodiny nenastaven"}</span>
+      <span class="score-student-status" data-score-status="${escapeHtml(student.id)}" hidden></span>
+    </span>
     <span class="score-input-wrap">
       <input class="score-input" type="number" name="score-${escapeHtml(student.id)}" min="1" max="10" step="1" inputmode="numeric" placeholder="–" aria-label="Body pro ${escapeHtml(student.name)}">
       bodů
     </span>
   </label>`).join("");
+  updateScoreAvailability(entries, date, type);
+}
+
+export function updateScoreAvailability(entries, date, type) {
+  const week = date ? weekStart(date) : null;
+  document.querySelectorAll(".score-student").forEach((row) => {
+    const input = row.querySelector(".score-input");
+    const status = row.querySelector(".score-student-status");
+    const studentId = input.name.slice("score-".length);
+    const existing = type === "lesson" && week
+      ? entries.find((entry) => entry.studentId === studentId
+        && (entry.type || "lesson") === "lesson" && weekStart(entry.date) === week)
+      : null;
+    input.disabled = Boolean(existing);
+    status.hidden = !existing;
+    status.textContent = existing
+      ? `Běžné body už zapsány (${formatDate(existing.date)}). Pro další zvol mimořádné body.`
+      : "";
+  });
 }
 
 export function renderStudents(students, rankedStudents) {
@@ -91,7 +124,15 @@ export function renderStudents(students, rankedStudents) {
         <span class="student-avatar" aria-hidden="true">${avatarEmoji(student.avatar)}</span>
         <div class="student-info">
           <strong>${escapeHtml(student.name)}</strong>
-          <span>${stats?.totalPoints ?? 0} bodů · ${level.name}</span>
+          <span>${stats?.totalPoints ?? 0} bodů · ${level.name} · ${student.lessonDay ? lessonDayName(student.lessonDay) : "den hodiny nenastaven"}</span>
+        </div>
+        <div class="student-day-control">
+          <label class="sr-only" for="lesson-day-${escapeHtml(student.id)}">Den hodiny – ${escapeHtml(student.name)}</label>
+          <select id="lesson-day-${escapeHtml(student.id)}" data-lesson-day="${escapeHtml(student.id)}">
+            <option value="">Den hodiny</option>
+            ${LESSON_DAYS.map(([value, label]) => `<option value="${value}"${student.lessonDay === value ? " selected" : ""}>${label}</option>`).join("")}
+          </select>
+          <button class="student-action" type="button" data-save-lesson-day="${escapeHtml(student.id)}"${student.lessonDay === "" ? " disabled" : ""}>Uložit den</button>
         </div>
         <button class="student-action" type="button" data-reset-student="${escapeHtml(student.id)}">Nový kód</button>
         <button class="remove-student" type="button" data-remove-student="${escapeHtml(student.id)}" aria-label="Odebrat žáka ${escapeHtml(student.name)}">Odebrat</button>
@@ -125,7 +166,9 @@ export function renderHistory(state, filterId, role) {
     return;
   }
   container.innerHTML = entries.map((entry) => `<article class="history-row">
-    <span class="history-person">${escapeHtml(entry.studentName)}</span>
+    <span class="history-person">${escapeHtml(entry.studentName)}
+      ${entry.type === "extra" ? `<small class="history-extra">Mimořádné body · ${escapeHtml(entry.reason)}</small>` : ""}
+    </span>
     <time class="history-date" datetime="${escapeHtml(entry.date)}">${formatDate(entry.date)}</time>
     <span class="points-pill">＋${entry.score} ${plural(entry.score, "bod", "body", "bodů")}</span>
   </article>`).join("");
@@ -149,6 +192,16 @@ function emptyState(title, message) {
 function formatDate(value) {
   const date = new Date(`${value}T12:00:00`);
   return new Intl.DateTimeFormat("cs-CZ", { day: "numeric", month: "long", year: "numeric" }).format(date);
+}
+
+function weekStart(value) {
+  const date = new Date(`${value}T00:00:00.000Z`);
+  date.setUTCDate(date.getUTCDate() - ((date.getUTCDay() + 6) % 7));
+  return date.toISOString().slice(0, 10);
+}
+
+function lessonDayName(value) {
+  return LESSON_DAYS.find(([day]) => day === value)?.[1] ?? "";
 }
 
 function plural(value, one, few, many) {

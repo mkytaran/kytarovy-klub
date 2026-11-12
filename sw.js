@@ -1,4 +1,4 @@
-const CACHE_NAME = "kytarovy-klub-v10";
+const CACHE_NAME = "kytarovy-klub-v11";
 const APP_SHELL = [
   "./",
   "./index.html",

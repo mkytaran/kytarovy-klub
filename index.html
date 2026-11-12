@@ -99,7 +99,7 @@
             <div class="page-heading">
               <p class="eyebrow">MOTIVACE NA KAŽDÉ HODINĚ</p>
               <h1 id="scores-title">Zapsat body <span class="heading-emoji" aria-hidden="true">✨</span></h1>
-              <p>Za dnešní snahu může každý kytarista získat 1 až 10 bodů.</p>
+              <p>Běžné body může každý žák dostat jednou za týden. Koncerty a jiné výjimečné události zapisuj jako mimořádné body.</p>
             </div>
             <form id="score-form" class="form-card">
               <div class="form-topline">
@@ -107,8 +107,19 @@
                   Datum lekce
                   <input id="lesson-date" name="date" type="date" required>
                 </label>
-                <p class="form-hint">Vyplň body jen těm, které chceš dnes ohodnotit.</p>
+                <label class="field-label score-type-field" for="score-type">
+                  Typ zápisu
+                  <select id="score-type" name="type">
+                    <option value="lesson">Běžné body za týdenní hodinu</option>
+                    <option value="extra">Mimořádné body</option>
+                  </select>
+                </label>
+                <label class="field-label extra-reason-field" id="extra-reason-field" for="score-reason" hidden>
+                  Důvod mimořádných bodů
+                  <input id="score-reason" name="reason" type="text" maxlength="120" placeholder="Např. koncert">
+                </label>
               </div>
+              <p class="form-hint score-form-hint">Běžný zápis je možný jednou za kalendářní týden (pondělí–neděle). Už zapsaní žáci budou označeni.</p>
               <div id="score-students" class="score-students"></div>
               <div class="form-footer">
                 <span class="form-hint">Body jsou pochvala za snahu, ne školní známka. 💛</span>
@@ -131,6 +142,19 @@
               <label class="field-label code-field" for="student-code">
                 Šestimístný kód
                 <input id="student-code" name="code" type="password" inputmode="numeric" pattern="[0-9]{6}" minlength="6" maxlength="6" autocomplete="off" required>
+              </label>
+              <label class="field-label lesson-day-field" for="student-lesson-day">
+                Den hodiny
+                <select id="student-lesson-day" name="lessonDay">
+                  <option value="">Zatím nevybrán</option>
+                  <option value="monday">Pondělí</option>
+                  <option value="tuesday">Úterý</option>
+                  <option value="wednesday">Středa</option>
+                  <option value="thursday">Čtvrtek</option>
+                  <option value="friday">Pátek</option>
+                  <option value="saturday">Sobota</option>
+                  <option value="sunday">Neděle</option>
+                </select>
               </label>
               <button class="button button-primary" type="submit">＋ Přidat žáka</button>
             </form>

@@ -162,8 +162,12 @@ export function getClassData() {
   return callServer("getClassData", accessToken);
 }
 
-export function addStudent(name, code) {
-  return callServer("addStudent", accessToken, name, code);
+export function addStudent(name, code, lessonDay) {
+  return callServer("addStudent", accessToken, name, code, lessonDay);
+}
+
+export function updateStudentLessonDay(studentId, lessonDay) {
+  return callServer("updateStudentLessonDay", accessToken, studentId, lessonDay);
 }
 
 export function deactivateStudent(studentId) {
@@ -174,8 +178,8 @@ export function resetStudentCode(studentId, code) {
   return callServer("resetStudentCode", accessToken, studentId, code);
 }
 
-export function recordScores(date, scores) {
-  return callServer("recordScores", accessToken, date, scores);
+export function recordScores(date, scores, type, reason) {
+  return callServer("recordScores", accessToken, date, scores, type, reason);
 }
 
 export function selectAvatar(avatarId) {

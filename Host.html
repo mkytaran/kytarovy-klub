@@ -27,6 +27,7 @@
           logout: "apiLogout",
           getClassData: "apiGetClassData",
           addStudent: "apiAddStudent",
+          updateStudentLessonDay: "apiUpdateStudentLessonDay",
           deactivateStudent: "apiDeactivateStudent",
           resetStudentCode: "apiResetStudentCode",
           recordScores: "apiRecordScores",
@@ -43,7 +44,7 @@
             || !request || request.channel !== "kytarovy-klub" || request.type !== "request"
             || typeof request.id !== "string" || !/^[a-f0-9-]{36}$/i.test(request.id)
             || !Object.prototype.hasOwnProperty.call(allowedMethods, request.method) || !Array.isArray(request.args)
-            || request.args.length > 3 || JSON.stringify(request).length > 16000) return;
+            || request.args.length > 5 || JSON.stringify(request).length > 16000) return;
 
           const reply = (result) => {
             const response = {

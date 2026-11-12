@@ -7,10 +7,18 @@ import {
   logout,
   recordScores,
   resetStudentCode,
-  selectAvatar
+  selectAvatar,
+  updateStudentLessonDay
 } from "./api.js";
 import { getCurrentDate, getStudentStats } from "./stats.js";
-import { renderHistory, renderOverview, renderProfile, renderScoreForm, renderStudents } from "./ui.js";
+import {
+  renderHistory,
+  renderOverview,
+  renderProfile,
+  renderScoreForm,
+  renderStudents,
+  updateScoreAvailability
+} from "./ui.js";
 
 const notice = document.querySelector("#notice");
 const IDLE_TIMEOUT_MS = 15 * 60 * 1000;
@@ -90,7 +98,10 @@ function showPage(name) {
     if (active) link.setAttribute("aria-current", "page");
     else link.removeAttribute("aria-current");
   });
-  if (name === "body") document.querySelector("#lesson-date").value ||= getCurrentDate();
+  if (name === "body") {
+    document.querySelector("#lesson-date").value ||= getCurrentDate();
+    syncScoreControls();
+  }
   if (name === "historie") renderHistory(classData, undefined, currentUser.role);
   window.scrollTo({ top: 0, behavior: "smooth" });
 }
@@ -99,12 +110,32 @@ function render() {
   const stats = getStudentStats(classData);
   renderOverview(classData, currentUser);
   if (currentUser.role === "teacher") {
-    renderScoreForm(classData.students);
+    renderScoreForm(
+      classData.students,
+      classData.entries,
+      document.querySelector("#lesson-date").value,
+      document.querySelector("#score-type").value
+    );
     renderStudents(classData.students, stats);
+    syncScoreControls();
   } else {
     renderProfile(currentUser);
   }
   renderHistory(classData, undefined, currentUser.role);
+}
+
+function syncScoreControls() {
+  const form = document.querySelector("#score-form");
+  const isExtra = form.elements.type.value === "extra";
+  const reasonField = document.querySelector("#extra-reason-field");
+  reasonField.hidden = !isExtra;
+  form.elements.reason.required = isExtra;
+  if (!isExtra) form.elements.reason.value = "";
+  updateScoreAvailability(
+    classData?.entries ?? [],
+    form.elements.date.value,
+    form.elements.type.value
+  );
 }
 
 async function refreshAfterMutation() {
@@ -185,12 +216,13 @@ document.querySelector("#student-form").addEventListener("submit", async (event)
   const form = event.currentTarget;
   const name = form.elements.name.value.trim().replace(/\s+/g, " ");
   const code = form.elements.code.value;
+  const lessonDay = form.elements.lessonDay.value;
   if (!name || !/^[0-9]{6}$/.test(code)) {
     showNotice("Vyplň jméno a šestimístný číselný kód.", true);
     return;
   }
   try {
-    await addStudent(name, code);
+    await addStudent(name, code, lessonDay);
     form.reset();
     if (await refreshAfterMutation()) {
       showNotice(`Účet pro ${name} je připravený. Kód předej žákovi bezpečně.`);
@@ -206,6 +238,8 @@ document.querySelector("#score-form").addEventListener("submit", async (event) =
   event.preventDefault();
   const form = event.currentTarget;
   const date = form.elements.date.value;
+  const type = form.elements.type.value;
+  const reason = form.elements.reason.value.trim();
   const scores = classData.students.flatMap((student) => {
     const input = form.elements[`score-${student.id}`];
     if (!input || input.value === "") return [];
@@ -223,13 +257,18 @@ document.querySelector("#score-form").addEventListener("submit", async (event) =
     showNotice("Body musí být celé číslo od 1 do 10.", true);
     return;
   }
+  if (type === "extra" && (reason.length < 2 || reason.length > 120)) {
+    showNotice("U mimořádných bodů uveď důvod dlouhý 2 až 120 znaků.", true);
+    return;
+  }
   try {
-    await recordScores(date, scores);
+    await recordScores(date, scores, type, reason);
     form.reset();
     document.querySelector("#lesson-date").value = getCurrentDate();
+    syncScoreControls();
     if (await refreshAfterMutation()) {
       showPage("body");
-      showNotice("Body zapsány. Jen tak dál! ⭐");
+      showNotice(type === "extra" ? "Mimořádné body zapsány. Jen tak dál! ⭐" : "Týdenní body zapsány. Jen tak dál! ⭐");
     } else if (currentUser) {
       showNotice("Body byly uloženy, ale přehled se nepodařilo obnovit. Znovu načti aplikaci a zápis neopakuj.", true);
     }
@@ -238,7 +277,32 @@ document.querySelector("#score-form").addEventListener("submit", async (event) =
   }
 });
 
+document.querySelector("#lesson-date").addEventListener("change", syncScoreControls);
+document.querySelector("#score-type").addEventListener("change", syncScoreControls);
+
 document.querySelector("#students-list").addEventListener("click", async (event) => {
+  const saveLessonDayButton = event.target.closest("[data-save-lesson-day]");
+  if (saveLessonDayButton) {
+    const studentId = saveLessonDayButton.dataset.saveLessonDay;
+    const select = document.querySelector(`[data-lesson-day="${CSS.escape(studentId)}"]`);
+    const student = classData.students.find((item) => item.id === studentId);
+    if (!student || !select || select.value === student.lessonDay) return;
+    saveLessonDayButton.disabled = true;
+    try {
+      await updateStudentLessonDay(studentId, select.value);
+      if (await refreshAfterMutation()) {
+        showNotice(`Den hodiny pro ${student.name} byl uložen.`);
+      } else if (currentUser) {
+        saveLessonDayButton.disabled = false;
+        showNotice(`Den hodiny pro ${student.name} byl uložen, ale seznam se nepodařilo obnovit. Znovu načti aplikaci.`, true);
+      }
+    } catch (error) {
+      handleError(error);
+      saveLessonDayButton.disabled = false;
+    }
+    return;
+  }
+
   const resetButton = event.target.closest("[data-reset-student]");
   if (resetButton) {
     const code = window.prompt("Zadej nový šestimístný kód a předej ho žákovi osobně:");
@@ -271,6 +335,14 @@ document.querySelector("#students-list").addEventListener("click", async (event)
   } catch (error) {
     handleError(error);
   }
+});
+
+document.querySelector("#students-list").addEventListener("change", (event) => {
+  const select = event.target.closest("[data-lesson-day]");
+  if (!select) return;
+  const student = classData.students.find((item) => item.id === select.dataset.lessonDay);
+  const saveButton = document.querySelector(`[data-save-lesson-day="${CSS.escape(select.dataset.lessonDay)}"]`);
+  if (student && saveButton) saveButton.disabled = select.value === student.lessonDay;
 });
 
 document.querySelector("#avatar-picker").addEventListener("click", async (event) => {
