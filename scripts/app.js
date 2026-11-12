@@ -7,6 +7,7 @@ import {
   logout,
   recordScores,
   resetStudentCode,
+  restoreSession,
   selectAvatar,
   updateStudentLessonDay
 } from "./api.js";
@@ -21,13 +22,9 @@ import {
 } from "./ui.js";
 
 const notice = document.querySelector("#notice");
-const IDLE_TIMEOUT_MS = 15 * 60 * 1000;
-const HIDDEN_TIMEOUT_MS = 5 * 60 * 1000;
 let currentUser = null;
 let classData = null;
 let noticeTimer;
-let idleTimer;
-let hiddenTimer;
 
 function showNotice(message, isError = false) {
   notice.textContent = message;
@@ -38,8 +35,6 @@ function showNotice(message, isError = false) {
 }
 
 function showLogin() {
-  clearTimeout(idleTimer);
-  clearTimeout(hiddenTimer);
   currentUser = null;
   classData = null;
   clearSession();
@@ -58,14 +53,7 @@ function showLogin() {
   document.querySelector("#profile-avatar").textContent = "";
 }
 
-function resetIdleTimer() {
-  clearTimeout(idleTimer);
-  if (currentUser) idleTimer = setTimeout(() => endSession("Kvůli nečinnosti jsi byl/a bezpečně odhlášen/a."), IDLE_TIMEOUT_MS);
-}
-
 async function endSession(message) {
-  clearTimeout(idleTimer);
-  clearTimeout(hiddenTimer);
   let revoked = true;
   try {
     await logout();
@@ -75,7 +63,7 @@ async function endSession(message) {
   }
   showLogin();
   showNotice(
-    revoked ? message : `${message} Serverové přihlášení vyprší nejpozději za osm hodin.`,
+    revoked ? message : `${message} Serverové přihlášení vyprší nejpozději do šesti hodin.`,
     !revoked
   );
 }
@@ -167,7 +155,6 @@ function showAuthenticatedApp() {
   if (!currentUser.avatarChosen) {
     showNotice("Nejdřív si vyber avatara. Později ho můžeš kdykoli změnit.");
   }
-  resetIdleTimer();
 }
 
 function handleError(error) {
@@ -376,21 +363,6 @@ document.querySelector("#logout-button").addEventListener("click", async () => {
   await endSession("Bezpečně odhlášeno.");
 });
 
-for (const eventName of ["pointerdown", "keydown", "touchstart", "scroll"]) {
-  document.addEventListener(eventName, resetIdleTimer, { passive: true });
-}
-
-document.addEventListener("visibilitychange", () => {
-  if (!currentUser) return;
-  if (document.hidden) {
-    clearTimeout(hiddenTimer);
-    hiddenTimer = setTimeout(() => endSession("Po opuštění aplikace jsi byl/a bezpečně odhlášen/a."), HIDDEN_TIMEOUT_MS);
-  } else {
-    clearTimeout(hiddenTimer);
-    resetIdleTimer();
-  }
-});
-
 if (window.parent === window) {
   const installButton = document.querySelector("#install-button");
   let installPrompt;
@@ -429,3 +401,20 @@ if (window.parent === window) {
     });
   }
 }
+
+async function restoreSavedSession() {
+  const submit = document.querySelector("#login-form button[type=submit]");
+  submit.disabled = true;
+  try {
+    classData = await restoreSession();
+    if (!classData) return;
+    currentUser = classData.user;
+    showAuthenticatedApp();
+  } catch (error) {
+    handleError(error);
+  } finally {
+    submit.disabled = false;
+  }
+}
+
+restoreSavedSession();

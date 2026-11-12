@@ -50,9 +50,9 @@ Tato adresa musí přesně odpovídat vlastnosti `APP_URL` v Apps Scriptu. V `in
 - Kódy mají přesně šest číslic. Aplikace ukládá HMAC otisky chráněné `PIN_PEPPER`, nikoli čitelné kódy.
 - Žáci vidí své zápisy a třídní žebříček; učitel vidí historii celé třídy a spravuje žáky.
 - U běžných bodů server povolí nejvýše jeden zápis na žáka v kalendářním týdnu od pondělí do neděle. Mimořádné zápisy (např. koncert) jsou samostatný typ s povinným důvodem a do limitu se nepočítají.
-- Přihlášení se uchovává pouze v paměti stránky a nejvýše šest hodin. Po změně kódu nebo odebrání účtu se stará relace zneplatní.
+- PWA na tomto zařízení ukládá přihlašovací token v místním úložišti, nikdy ne PIN; vložená webová verze drží token jen v paměti. Přihlášení v PWA se obnoví po zavření a opětovném otevření aplikace a skončí ručním odhlášením. Serverovou relaci prodlužuje při každém požadavku; po šesti hodinách bez kontaktu (např. při dlouhém zavření aplikace) je nutné se znovu přihlásit. Po změně kódu nebo odebrání účtu se stará relace zneplatní. Na sdíleném zařízení se vždy odhlaš.
 - Apps Script omezuje neúspěšná přihlášení na pět pokusů pro jméno a šedesát pokusů za patnáct minut pro neznámá jména. Limity používají dočasnou cache a mohou se při jejím vyprázdnění uvolnit; Google Apps Script navíc neposkytuje této aplikaci spolehlivou IP adresu klienta. Ochrana proti automatizovanému hádání proto není tak robustní jako u specializovaného API. Šestimístné kódy předávej soukromě.
-- Service worker ukládá do cache pouze veřejné soubory aplikace. Přihlašovací údaje, relace ani data třídy se do cache ani místního úložiště neukládají. Aplikaci lze otevřít i bez připojení, ale přihlášení a veškerá práce s daty vyžadují internet.
+- Service worker ukládá do cache pouze veřejné soubory aplikace. Přihlašovací údaje ani data třídy se neukládají; přihlašovací token je uložen odděleně v místním úložišti, aby šlo relaci obnovit. Aplikaci lze otevřít i bez připojení, ale přihlášení a práce s daty vyžadují internet.
 - Apps Script má kvóty a limity souběžných běhů; pro malou třídu obvykle postačí, ale nejde o službu s garantovanou dostupností.
 
 Před ukládáním údajů nezletilých ověř pravidla školy a požadavky na ochranu osobních údajů pro použité služby.

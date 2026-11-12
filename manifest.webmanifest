@@ -10,12 +10,6 @@
   "theme_color": "#111827",
   "icons": [
     {
-      "src": "icons/guitar.svg",
-      "sizes": "any",
-      "type": "image/svg+xml",
-      "purpose": "any"
-    },
-    {
       "src": "icons/guitar-192.png",
       "sizes": "192x192",
       "type": "image/png",

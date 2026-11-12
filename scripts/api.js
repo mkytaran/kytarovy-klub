@@ -1,6 +1,8 @@
 let accessToken = null;
 const pendingRequests = new Map();
 const CHANNEL = "kytarovy-klub";
+const SESSION_STORAGE_KEY = "kytarovy-klub-session";
+const CAN_PERSIST_SESSION = window.parent === window;
 
 function isAppsScriptOrigin(origin) {
   try {
@@ -141,21 +143,34 @@ function receiveResponse(event) {
 export async function login(name, code) {
   const result = await callServer("login", name, code);
   accessToken = result.token;
+  if (CAN_PERSIST_SESSION) window.localStorage.setItem(SESSION_STORAGE_KEY, accessToken);
   return result.user;
 }
 
+export async function restoreSession() {
+  if (!CAN_PERSIST_SESSION) return null;
+  accessToken = window.localStorage.getItem(SESSION_STORAGE_KEY);
+  if (!accessToken) return null;
+  try {
+    return await getClassData();
+  } catch (error) {
+    if (error.status === 401) clearSession();
+    throw error;
+  }
+}
+
 export async function logout() {
-  if (!accessToken) return;
   const token = accessToken;
   try {
-    await callServer("logout", token);
+    if (token) await callServer("logout", token);
   } finally {
-    accessToken = null;
+    clearSession();
   }
 }
 
 export function clearSession() {
   accessToken = null;
+  if (CAN_PERSIST_SESSION) window.localStorage.removeItem(SESSION_STORAGE_KEY);
 }
 
 export function getClassData() {
