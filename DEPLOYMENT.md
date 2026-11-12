@@ -67,3 +67,7 @@ Supabase schéma, Worker, tajný klíč Supabase a účet učitele už byly při
 2. Na stránce **Správa žáků** založ každého žáka znovu. Nastav heslo dlouhé alespoň 12 znaků a předej ho soukromě. Staré šestimístné kódy pro nový systém neplatí.
 3. Jakmile ověříš přihlášení, správu účtů a zápis bodů, můžeš Google tabulku ponechat jako archiv. Její service account, Google Sheets API ani Google klíč nejsou pro novou verzi potřeba.
 4. Bootstrap tajemství `SUPABASE_BOOTSTRAP_SECRET` po vytvoření učitele smaž příkazem `npx wrangler secret delete SUPABASE_BOOTSTRAP_SECRET`; nová aplikace ho k běžnému provozu nepotřebuje. Tajemství `SUPABASE_SECRET_KEY` ponech.
+
+### Obnovení hesla učitele
+
+Pokud se učitel nemůže přihlásit, nastav nové náhodné `SUPABASE_BOOTSTRAP_SECRET` (alespoň 32 znaků), nasaď Worker a spusť `node reset-teacher-password.mjs` v adresáři `worker`. Skript bezpečně skryje bootstrap tajemství i nové heslo; po úspěšné změně bootstrap secret smaž. Staré relace se při změně hesla zneplatní.

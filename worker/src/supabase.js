@@ -25,6 +25,10 @@ export async function handleSupabaseRequest(request, env) {
 
   if (pathname === "/api/v2/auth/login" && request.method === "POST") return login(request, env);
   if (pathname === "/api/v2/auth/bootstrap" && request.method === "POST") return bootstrapTeacher(request, env);
+  if (pathname === "/api/v2/auth/teacher-password" && request.method === "POST") {
+    await requireBootstrapSecret(request, env);
+    return resetTeacherPassword(request, env);
+  }
   if (pathname === "/api/v2/auth/logout" && request.method === "POST") return logout(request, env);
   const account = await authenticatedAccount(request, env);
   if (pathname === "/api/v2/data" && request.method === "GET") {
@@ -135,6 +139,34 @@ async function bootstrapTeacher(request, env) {
 
   const profile = await createAuthProfile(env, clean, "teacher", password, "guitar", "");
   return json({ user: publicProfile(profile) }, 201);
+}
+
+async function resetTeacherPassword(request, env) {
+  const { password } = await readJson(request);
+  validateNewPassword(password);
+  const teachers = await selectRows(env, "profiles", {
+    select: "id,auth_version",
+    role: "eq.teacher",
+    active: "eq.true",
+    limit: "2"
+  });
+  if (teachers.length !== 1) {
+    throw new SupabaseError(409, "Musí existovat právě jeden aktivní účet učitele.");
+  }
+  const teacher = teachers[0];
+  await authRequest(env, `/auth/v1/admin/users/${encodeURIComponent(teacher.id)}`, {
+    method: "PUT",
+    body: { password }
+  });
+  const updated = await updateRows(env, "profiles", {
+    auth_version: teacher.auth_version + 1
+  }, {
+    id: `eq.${teacher.id}`,
+    role: "eq.teacher",
+    active: "eq.true"
+  });
+  if (!updated.length) throw new SupabaseError(503, "Heslo se změnilo, ale relaci se nepodařilo obnovit; přihlas se novým heslem.");
+  return json({ ok: true }, 200, { "Cache-Control": "no-store" });
 }
 
 async function requireBootstrapSecret(request, env) {
