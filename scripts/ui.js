@@ -36,16 +36,43 @@ export function renderOverview(state, currentUser) {
   }
   leaderboard.innerHTML = rankedStudents.map((student, index) => {
     const level = getLevel(student.totalPoints);
-    return `<article class="leader-row">
-      <span class="rank-badge rank-${Math.min(index + 1, 3)}">${index + 1}</span>
+    const canViewHistory = currentUser.role === "teacher" || student.id === currentUser.id;
+    const historyId = `leader-history-${student.id}`;
+    const row = `<span class="rank-badge rank-${Math.min(index + 1, 3)}">${index + 1}</span>
       <span class="student-avatar" aria-hidden="true">${avatarEmoji(student.avatar)}</span>
-      <div>
-        <p class="leader-name">${escapeHtml(student.name)}</p>
-        <p class="leader-level">${level.name} · ${student.lessonCount} ${plural(student.lessonCount, "zápis", "zápisy", "zápisů")}</p>
-      </div>
-      <span class="leader-points">${student.totalPoints} ${plural(student.totalPoints, "bod", "body", "bodů")}</span>
-    </article>`;
+      <span>
+        <span class="leader-name">${escapeHtml(student.name)}</span>
+        <span class="leader-level">${level.name} · ${student.lessonCount} ${plural(student.lessonCount, "zápis", "zápisy", "zápisů")}${canViewHistory ? " · Zobrazit body" : ""}</span>
+      </span>
+      <span class="leader-points">${student.totalPoints} ${plural(student.totalPoints, "bod", "body", "bodů")}</span>`;
+    const entries = canViewHistory
+      ? state.entries.filter((entry) => entry.studentId === student.id)
+      : [];
+    return `<div class="leader-item">
+      ${canViewHistory
+    ? `<button class="leader-row" type="button" data-student-history="${escapeHtml(historyId)}" aria-expanded="false" aria-controls="${escapeHtml(historyId)}" aria-label="Zobrazit dosavadní body žáka ${escapeHtml(student.name)}">${row}</button>
+        ${renderStudentHistory(historyId, entries, student.totalPoints)}`
+    : `<article class="leader-row">${row}</article>`}
+    </div>`;
   }).join("");
+}
+
+function renderStudentHistory(historyId, entries, totalPoints) {
+  const sortedEntries = entries
+    .slice()
+    .sort((a, b) => b.date.localeCompare(a.date) || b.createdAt.localeCompare(a.createdAt));
+  return `<div class="student-history overview-student-history" id="${escapeHtml(historyId)}" hidden>
+    <strong>Dosavadní body: ${totalPoints} ${plural(totalPoints, "bod", "body", "bodů")}</strong>
+    ${sortedEntries.length > 0
+    ? sortedEntries.map((entry) => `<div class="student-history-row">
+        <span>
+          <time datetime="${escapeHtml(entry.date)}">${formatDate(entry.date)}</time>
+          ${entry.type === "extra" ? `<small class="history-extra">Mimořádné body · ${escapeHtml(entry.reason)}</small>` : ""}
+        </span>
+        <span class="points-pill">＋${entry.score} ${plural(entry.score, "bod", "body", "bodů")}</span>
+      </div>`).join("")
+    : `<p class="student-history-empty">Zatím nemá žádné bodové zápisy.</p>`}
+  </div>`;
 }
 
 function statCard(label, value, icon) {
@@ -120,10 +147,7 @@ export function renderStudents(students, rankedStudents, entries) {
     .map((student) => {
       const stats = statsById.get(student.id);
       const level = getLevel(stats?.totalPoints ?? 0);
-      const studentEntries = entries
-        .filter((entry) => entry.studentId === student.id)
-        .slice()
-        .sort((a, b) => b.date.localeCompare(a.date) || b.createdAt.localeCompare(a.createdAt));
+      const studentEntries = entries.filter((entry) => entry.studentId === student.id);
       const historyId = `student-history-${student.id}`;
       return `<article class="student-card">
         <button class="student-card-heading" type="button" data-student-history="${escapeHtml(historyId)}" aria-expanded="false" aria-controls="${escapeHtml(historyId)}" aria-label="Zobrazit dosavadní body žáka ${escapeHtml(student.name)}">
@@ -134,18 +158,7 @@ export function renderStudents(students, rankedStudents, entries) {
             <span class="student-history-hint">Zobrazit dosavadní body</span>
           </div>
         </button>
-        <div class="student-history" id="${escapeHtml(historyId)}" hidden>
-          <strong>Dosavadní body: ${stats?.totalPoints ?? 0} ${plural(stats?.totalPoints ?? 0, "bod", "body", "bodů")}</strong>
-          ${studentEntries.length > 0
-    ? studentEntries.map((entry) => `<div class="student-history-row">
-            <span>
-              <time datetime="${escapeHtml(entry.date)}">${formatDate(entry.date)}</time>
-              ${entry.type === "extra" ? `<small class="history-extra">Mimořádné body · ${escapeHtml(entry.reason)}</small>` : ""}
-            </span>
-            <span class="points-pill">＋${entry.score} ${plural(entry.score, "bod", "body", "bodů")}</span>
-          </div>`).join("")
-    : `<p class="student-history-empty">Zatím nemá žádné bodové zápisy.</p>`}
-        </div>
+        ${renderStudentHistory(historyId, studentEntries, stats?.totalPoints ?? 0)}
         <div class="student-card-actions">
           <div class="student-day-control">
             <label class="sr-only" for="lesson-day-${escapeHtml(student.id)}">Den hodiny – ${escapeHtml(student.name)}</label>

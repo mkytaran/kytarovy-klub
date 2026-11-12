@@ -20,14 +20,19 @@
 .stat-value { display: flex; align-items: center; gap: 9px; margin: 0; font-family: "Manrope", sans-serif; font-size: 27px; font-weight: 800; }
 .stat-icon { font-size: 19px; }
 .leaderboard { overflow: hidden; border: 1px solid var(--line); border-radius: 18px; background: var(--white); }
-.leader-row { display: grid; grid-template-columns: 36px 46px minmax(0, 1fr) auto; align-items: center; gap: 13px; padding: 16px 20px; border-bottom: 1px solid #f0f0ec; }
-.leader-row:last-child { border-bottom: 0; }
+.leader-item { border-bottom: 1px solid #f0f0ec; }
+.leader-item:last-child { border-bottom: 0; }
+.leader-row { display: grid; width: 100%; grid-template-columns: 36px 46px minmax(0, 1fr) auto; align-items: center; gap: 13px; padding: 16px 20px; border: 0; color: inherit; background: transparent; text-align: left; font: inherit; }
+button.leader-row { cursor: pointer; }
+button.leader-row:hover { background: #fafaf7; }
+button.leader-row:focus-visible { outline: 2px solid var(--orange); outline-offset: -3px; }
+.leader-row > span:nth-child(3) { min-width: 0; }
 .rank-badge { display: grid; width: 36px; height: 36px; place-items: center; border-radius: 12px; color: #66717e; background: #f2f3f1; font-weight: 800; }
 .rank-badge.rank-1 { color: #79551a; background: #fff0c9; }
 .rank-badge.rank-2 { color: #63717d; background: #e9eef1; }
 .rank-badge.rank-3 { color: #895b48; background: #f6e8df; }
-.leader-name { overflow: hidden; margin: 0; font-weight: 700; text-overflow: ellipsis; white-space: nowrap; }
-.leader-level { margin: 4px 0 0; color: var(--muted); font-size: 11px; }
+.leader-name { display: block; overflow: hidden; margin: 0; font-weight: 700; text-overflow: ellipsis; white-space: nowrap; }
+.leader-level { display: block; margin: 4px 0 0; color: var(--muted); font-size: 11px; }
 .leader-points { color: var(--ink); font-weight: 800; white-space: nowrap; }
 .empty-state { padding: 35px 20px; color: var(--muted); text-align: center; line-height: 1.65; }
 .empty-state strong { display: block; margin-bottom: 5px; color: var(--ink); }
@@ -66,6 +71,7 @@
 .student-history-row time { color: var(--muted); font-size: 11px; }
 .student-history-row .points-pill { padding: 5px 8px; }
 .student-history-empty { margin: 10px 0 0; color: var(--muted); }
+.overview-student-history { margin: 0 20px 16px 115px; }
 .student-card-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
 .avatar-circle { display: grid; width: 48px; height: 48px; flex: 0 0 auto; place-items: center; border: 2px solid #fff; border-radius: 50%; background: #fff0c9; box-shadow: 0 0 0 1px #e7e7e1; font-size: 25px; }
 .avatar-large { width: 70px; height: 70px; font-size: 38px; }
@@ -109,6 +115,7 @@
   .date-field { width: 100%; }
   .score-students { grid-template-columns: 1fr; }
   .leader-row { grid-template-columns: 34px 42px minmax(0, 1fr) auto; gap: 8px; }
+  .overview-student-history { margin-right: 12px; margin-left: 89px; }
   .form-footer .button { align-self: stretch; }
 }
 @media (max-width: 480px) {

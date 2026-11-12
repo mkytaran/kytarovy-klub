@@ -111,6 +111,34 @@ function render() {
   renderHistory(classData, undefined, currentUser.role);
 }
 
+function toggleStudentHistory(event) {
+  const button = event.target.closest("[data-student-history]");
+  if (!button) return false;
+  const history = document.querySelector(`#${CSS.escape(button.dataset.studentHistory)}`);
+  if (!history) return true;
+  const expanded = button.getAttribute("aria-expanded") !== "true";
+  button.setAttribute("aria-expanded", String(expanded));
+  button.setAttribute(
+    "aria-label",
+    button.getAttribute("aria-label").replace(
+      expanded ? "Zobrazit" : "Skrýt",
+      expanded ? "Skrýt" : "Zobrazit"
+    )
+  );
+  button.querySelector(".student-history-hint")?.replaceChildren(
+    document.createTextNode(expanded ? "Skrýt dosavadní body" : "Zobrazit dosavadní body")
+  );
+  if (button.classList.contains("leader-row")) {
+    const hint = button.querySelector(".leader-level");
+    if (hint) hint.textContent = hint.textContent.replace(
+      expanded ? "Zobrazit body" : "Skrýt body",
+      expanded ? "Skrýt body" : "Zobrazit body"
+    );
+  }
+  history.hidden = !expanded;
+  return true;
+}
+
 function syncScoreControls() {
   const form = document.querySelector("#score-form");
   const isExtra = form.elements.type.value === "extra";
@@ -270,18 +298,7 @@ document.querySelector("#lesson-date").addEventListener("change", syncScoreContr
 document.querySelector("#score-type").addEventListener("change", syncScoreControls);
 
 document.querySelector("#students-list").addEventListener("click", async (event) => {
-  const historyButton = event.target.closest("[data-student-history]");
-  if (historyButton) {
-    const history = document.querySelector(`#${CSS.escape(historyButton.dataset.studentHistory)}`);
-    if (!history) return;
-    const expanded = historyButton.getAttribute("aria-expanded") !== "true";
-    historyButton.setAttribute("aria-expanded", String(expanded));
-    historyButton.querySelector(".student-history-hint").textContent = expanded
-      ? "Skrýt dosavadní body"
-      : "Zobrazit dosavadní body";
-    history.hidden = !expanded;
-    return;
-  }
+  if (toggleStudentHistory(event)) return;
 
   const saveLessonDayButton = event.target.closest("[data-save-lesson-day]");
   if (saveLessonDayButton) {
@@ -338,6 +355,8 @@ document.querySelector("#students-list").addEventListener("click", async (event)
     handleError(error);
   }
 });
+
+document.querySelector("#leaderboard").addEventListener("click", toggleStudentHistory);
 
 document.querySelector("#students-list").addEventListener("change", (event) => {
   const select = event.target.closest("[data-lesson-day]");
